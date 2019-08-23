@@ -421,7 +421,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mMainAdapter.notifyItemInserted(mList.size());
             mLinearLayout.removeAllViews();
             mLinearLayout.setVisibility(View.GONE);
-
         }).setTitleText("城市选择")
                 .setDividerColor(Color.BLACK)
                 .setTextColorCenter(Color.BLACK) //设置选中项文字颜色
@@ -475,6 +474,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     //动态添加录音的AudioVoiceView
     private void addAudioVoiceView() {
-
+        mLinearLayout.setVisibility(View.VISIBLE);
     }
 }

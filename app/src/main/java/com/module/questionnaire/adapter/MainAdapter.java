@@ -1,6 +1,8 @@
 package com.module.questionnaire.adapter;
 
 import android.content.Context;
+import android.content.res.AssetFileDescriptor;
+import android.media.MediaPlayer;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
@@ -18,6 +20,7 @@ import com.module.questionnaire.R;
 import com.module.questionnaire.bean.QuestionAnswerBean;
 import com.module.questionnaire.utils.StringUtil;
 
+import java.io.IOException;
 import java.util.List;
 
 public class MainAdapter extends RecyclerView.Adapter {
@@ -137,9 +140,25 @@ public class MainAdapter extends RecyclerView.Adapter {
                 }
             }
 
+            MediaPlayer mediaPlayer = new MediaPlayer();
             holder.mLoadingView.stopAnim();
             holder.mLoadingView.setVisibility(View.GONE);
             holder.textView.setText(mList.get(position).getLabel());
+            holder.textView.setOnClickListener(view -> {
+                try {
+                    if (!mediaPlayer.isPlaying()) {
+                        AssetFileDescriptor fd = mContext.getAssets().openFd("test.mp3");
+                        mediaPlayer.setDataSource(fd.getFileDescriptor(), fd.getStartOffset(), fd.getLength());
+                        mediaPlayer.prepare();
+                        mediaPlayer.start();
+                    } else {
+                        mediaPlayer.reset();
+                        mediaPlayer.stop();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
         }, 2000);
     }
 
