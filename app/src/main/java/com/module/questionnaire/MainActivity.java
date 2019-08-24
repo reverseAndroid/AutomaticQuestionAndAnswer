@@ -261,7 +261,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 addUploadFileView();
                 break;
             case 19:
-                Toast.makeText(this, "暂时完成", Toast.LENGTH_SHORT).show();
+                bean = new QuestionAnswerBean();
+                bean.setId(20);
+                bean.setType("问题1");
+                bean.setLabel("暂时完毕");
+                mList.add(bean);
+                mMainAdapter.notifyItemInserted(mList.size());
                 break;
             default:
                 break;
