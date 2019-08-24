@@ -15,7 +15,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <FrameLayout
-        android:layout_width="wrap_content"
+        android:layout_width="80dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="10dp"
         android:background="@drawable/item_main_question_bg"
@@ -23,10 +23,17 @@
         app:layout_constraintStart_toEndOf="@id/item_main_question2_avatar_iv"
         app:layout_constraintTop_toTopOf="parent">
 
+        <ImageView
+            android:id="@+id/item_main_question2_audio_player_iv"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_gravity="center_vertical" />
+
         <TextView
             android:id="@+id/item_main_question2_content_tv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="end"
             android:textColor="@color/black" />
 
         <com.ldoublem.loadingviewlib.view.LVCircularJump

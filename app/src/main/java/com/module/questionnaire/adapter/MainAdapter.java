@@ -2,6 +2,7 @@ package com.module.questionnaire.adapter;
 
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
+import android.graphics.drawable.AnimationDrawable;
 import android.media.MediaPlayer;
 import android.os.Handler;
 import android.os.Looper;
@@ -68,6 +69,9 @@ public class MainAdapter extends RecyclerView.Adapter {
             case 4:
                 mViewHolder = new AnswerHolder3(inflater.inflate(R.layout.item_main_answer3, parent, false));
                 break;
+            case 5:
+                mViewHolder = new AnswerHolder4(inflater.inflate(R.layout.item_main_answer4, parent, false));
+                break;
             default:
                 break;
         }
@@ -91,6 +95,9 @@ public class MainAdapter extends RecyclerView.Adapter {
                 break;
             case 4:
                 bindAnswerHolder3(viewHolder, position);
+                break;
+            case 5:
+                bindAnswerHolder4(viewHolder, position);
                 break;
             default:
                 break;
@@ -133,30 +140,61 @@ public class MainAdapter extends RecyclerView.Adapter {
             }
 
             if (position == 0) {
-                Glide.with(mContext).load(R.mipmap.ic_launcher).apply(new RequestOptions().circleCrop()).into(holder.imageView);
+                Glide.with(mContext).load(R.mipmap.ic_launcher).apply(new RequestOptions().circleCrop()).into(holder.imageAvatar);
             } else {
                 if (!mList.get(position - 1).getType().contains("问题")) {
-                    Glide.with(mContext).load(R.mipmap.ic_launcher).apply(new RequestOptions().circleCrop()).into(holder.imageView);
+                    Glide.with(mContext).load(R.mipmap.ic_launcher).apply(new RequestOptions().circleCrop()).into(holder.imageAvatar);
                 }
             }
 
+            final boolean[] isInit = {false};
             MediaPlayer mediaPlayer = new MediaPlayer();
+            //给imageAudioPlayer设置背景喇叭图，必须在代码中设置，在布局中设置会导致animationDrawable空指针
+            holder.imageAudioPlayer.setImageResource(R.drawable.audio_player_question);
+            //将imageAudioPlayer的背景喇叭图赋值给animationDrawable
+            AnimationDrawable animationDrawable = (AnimationDrawable) holder.imageAudioPlayer.getDrawable();
+            try {
+                AssetFileDescriptor fd = mContext.getAssets().openFd("test.mp3");
+                mediaPlayer.setDataSource(fd.getFileDescriptor(), fd.getStartOffset(), fd.getLength());
+                mediaPlayer.prepare();
+                isInit[0] = false;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
             holder.mLoadingView.stopAnim();
             holder.mLoadingView.setVisibility(View.GONE);
-            holder.textView.setText(mList.get(position).getLabel());
-            holder.textView.setOnClickListener(view -> {
+            holder.textView.setText(Double.valueOf(mediaPlayer.getDuration() / 1000).intValue() + "s");
+            holder.itemView.setOnClickListener(view -> {
                 try {
                     if (!mediaPlayer.isPlaying()) {
-                        AssetFileDescriptor fd = mContext.getAssets().openFd("test.mp3");
-                        mediaPlayer.setDataSource(fd.getFileDescriptor(), fd.getStartOffset(), fd.getLength());
-                        mediaPlayer.prepare();
+                        animationDrawable.start();
+                        //重新加载音频文件，如果不重新加载，无法再次播放(等到真实环境，这里是网络资源文件，需要使用通过异步的方式装载媒体资源mediaPlayer.prepareAsync())
+                        if (isInit[0]) {
+                            AssetFileDescriptor fd = mContext.getAssets().openFd("test.mp3");
+                            mediaPlayer.setDataSource(fd.getFileDescriptor(), fd.getStartOffset(), fd.getLength());
+                            mediaPlayer.prepare();
+                        }
                         mediaPlayer.start();
                     } else {
+                        animationDrawable.stop();
+                        animationDrawable.selectDrawable(0);
                         mediaPlayer.reset();
                         mediaPlayer.stop();
+                        isInit[0] = true;
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
+                }
+            });
+
+            mediaPlayer.setOnCompletionListener(mediaPlayer1 -> {
+                if (!mediaPlayer1.isPlaying()) {
+                    mediaPlayer.reset();
+                    mediaPlayer.stop();
+                    animationDrawable.stop();
+                    animationDrawable.selectDrawable(0);
+                    isInit[0] = true;
                 }
             });
         }, 2000);
@@ -187,6 +225,64 @@ public class MainAdapter extends RecyclerView.Adapter {
         }
     }
 
+    private void bindAnswerHolder4(RecyclerView.ViewHolder viewHolder, int position) {
+        AnswerHolder4 holder = (AnswerHolder4) viewHolder;
+        Glide.with(mContext).load(R.mipmap.ic_launcher).apply(new RequestOptions().circleCrop()).into(holder.imageAvatar);
+
+        final boolean[] isInit = {false};
+        MediaPlayer mediaPlayer = new MediaPlayer();
+        //给imageAudioPlayer设置背景喇叭图，必须在代码中设置，在布局中设置会导致animationDrawable空指针
+        holder.imageAudioPlayer.setImageResource(R.drawable.audio_player_answer);
+        //将imageAudioPlayer的背景喇叭图赋值给animationDrawable
+        AnimationDrawable animationDrawable = (AnimationDrawable) holder.imageAudioPlayer.getDrawable();
+        try {
+            AssetFileDescriptor fd = mContext.getAssets().openFd("test.mp3");
+            mediaPlayer.setDataSource(fd.getFileDescriptor(), fd.getStartOffset(), fd.getLength());
+            mediaPlayer.prepare();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        holder.textView.setText(Double.valueOf(mediaPlayer.getDuration() / 1000).intValue() + "s");
+        holder.itemView.setOnClickListener(view -> {
+            try {
+                if (!mediaPlayer.isPlaying()) {
+                    animationDrawable.start();
+                    //重新加载音频文件，如果不重新加载，无法再次播放(等到真实环境，这里是网络资源文件，需要使用通过异步的方式装载媒体资源mediaPlayer.prepareAsync())
+                    if (isInit[0]) {
+                        AssetFileDescriptor fd = mContext.getAssets().openFd("test.mp3");
+                        mediaPlayer.setDataSource(fd.getFileDescriptor(), fd.getStartOffset(), fd.getLength());
+                        mediaPlayer.prepare();
+                    }
+                    mediaPlayer.start();
+                } else {
+                    animationDrawable.stop();
+                    animationDrawable.selectDrawable(0);
+                    mediaPlayer.reset();
+                    mediaPlayer.stop();
+                    isInit[0] = true;
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+
+        mediaPlayer.setOnCompletionListener(mediaPlayer1 -> {
+            if (!mediaPlayer1.isPlaying()) {
+                mediaPlayer.reset();
+                mediaPlayer.stop();
+                animationDrawable.stop();
+                animationDrawable.selectDrawable(0);
+                isInit[0] = true;
+            }
+        });
+
+        if (mItemListener != null) {
+            Handler handler = new Handler(Looper.getMainLooper());
+            handler.postDelayed(() -> mItemListener.onInteraction(mList.get(position).getId()), 500);
+        }
+    }
+
     @Override
     public int getItemCount() {
         return mList.size();
@@ -211,6 +307,9 @@ public class MainAdapter extends RecyclerView.Adapter {
             case "回答3":
                 type = 4;
                 break;
+            case "回答4":
+                type = 5;
+                break;
             default:
                 type = 0;
                 break;
@@ -234,13 +333,15 @@ public class MainAdapter extends RecyclerView.Adapter {
 
     private class QuestionHolder2 extends RecyclerView.ViewHolder {
 
-        private ImageView imageView;
+        private ImageView imageAvatar;
+        private ImageView imageAudioPlayer;
         private TextView textView;
         private LVCircularJump mLoadingView;
 
         public QuestionHolder2(View itemView) {
             super(itemView);
-            imageView = itemView.findViewById(R.id.item_main_question2_avatar_iv);
+            imageAvatar = itemView.findViewById(R.id.item_main_question2_avatar_iv);
+            imageAudioPlayer = itemView.findViewById(R.id.item_main_question2_audio_player_iv);
             textView = itemView.findViewById(R.id.item_main_question2_content_tv);
             mLoadingView = itemView.findViewById(R.id.item_main_question2_loading_lvcj);
         }
@@ -277,6 +378,20 @@ public class MainAdapter extends RecyclerView.Adapter {
             super(itemView);
             imageView = itemView.findViewById(R.id.item_main_answer3_avatar_iv);
             imagePhoto = itemView.findViewById(R.id.item_main_answer3_photo_iv);
+        }
+    }
+
+    private class AnswerHolder4 extends RecyclerView.ViewHolder {
+
+        private ImageView imageAvatar;
+        private ImageView imageAudioPlayer;
+        private TextView textView;
+
+        public AnswerHolder4(View itemView) {
+            super(itemView);
+            imageAvatar = itemView.findViewById(R.id.item_main_answer4_avatar_iv);
+            imageAudioPlayer = itemView.findViewById(R.id.item_main_answer4_audio_player_iv);
+            textView = itemView.findViewById(R.id.item_main_answer4_content_tv);
         }
     }
 }

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animation-list xmlns:android="http://schemas.android.com/apk/res/android"
+    android:oneshot="false">
+
+    <!-- 添加多帧 -->
+    <!--duration这个属性代表动画显示多少毫秒-->
+    <item
+        android:drawable="@drawable/icon_audio_player_question3"
+        android:duration="200" />
+    <item
+        android:drawable="@drawable/icon_audio_player_question2"
+        android:duration="200" />
+    <item
+        android:drawable="@drawable/icon_audio_player_question1"
+        android:duration="200" />
+
+</animation-list>

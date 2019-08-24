@@ -1,9 +1,15 @@
 package com.module.questionnaire;
 
+import android.Manifest;
+import android.app.Dialog;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Handler;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -12,10 +18,16 @@ import android.support.v7.widget.OrientationHelper;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Log;
+import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RatingBar;
@@ -23,7 +35,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bigkoo.pickerview.builder.OptionsPickerBuilder;
+import com.bigkoo.pickerview.builder.TimePickerBuilder;
 import com.bigkoo.pickerview.view.OptionsPickerView;
+import com.bigkoo.pickerview.view.TimePickerView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.github.gcacace.signaturepad.views.SignaturePad;
@@ -38,6 +52,7 @@ import com.module.questionnaire.utils.StringUtil;
 
 import org.json.JSONArray;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -59,6 +74,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private List<JsonBean> options1Items = new ArrayList<>();
     private ArrayList<ArrayList<String>> options2Items = new ArrayList<>();
     private ArrayList<ArrayList<ArrayList<String>>> options3Items = new ArrayList<>();
+    private long mExitTime;
+
+    private static final int RECORD_AUDIO = 1000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -177,7 +195,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 mMainAdapter.notifyItemInserted(mList.size());
                 break;
             case 7:
-                addUploadView();
+                addUploadPhotoView();
                 break;
             case 8:
                 bean = new QuestionAnswerBean();
@@ -219,6 +237,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case 14:
                 addAudioVoiceView();
+                break;
+            case 15:
+                bean = new QuestionAnswerBean();
+                bean.setId(16);
+                bean.setType("问题1");
+                bean.setLabel("时间选择器");
+                mList.add(bean);
+                mMainAdapter.notifyItemInserted(mList.size());
+                break;
+            case 16:
+                addTimeSelectView();
+                break;
+            case 17:
+                bean = new QuestionAnswerBean();
+                bean.setId(18);
+                bean.setType("问题1");
+                bean.setLabel("上传文件");
+                mList.add(bean);
+                mMainAdapter.notifyItemInserted(mList.size());
+                break;
+            case 18:
+                addUploadFileView();
+                break;
+            case 19:
+                Toast.makeText(this, "暂时完成", Toast.LENGTH_SHORT).show();
                 break;
             default:
                 break;
@@ -324,11 +367,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     //动态添加上传图片的UploadView
-    private void addUploadView() {
+    private void addUploadPhotoView() {
         mLinearLayout.setVisibility(View.VISIBLE);
-        View view = LayoutInflater.from(this).inflate(R.layout.main_upload_view, null);
-        LinearLayout linearAlbum = view.findViewById(R.id.main_upload_view_album_ll);
-        LinearLayout linearCamera = view.findViewById(R.id.main_upload_view_camera_ll);
+        View view = LayoutInflater.from(this).inflate(R.layout.main_upload_photo_view, null);
+        LinearLayout linearAlbum = view.findViewById(R.id.main_upload_photo_view_album_ll);
+        LinearLayout linearCamera = view.findViewById(R.id.main_upload_photo_view_camera_ll);
 
         linearAlbum.setOnClickListener(view1 -> {
             QuestionAnswerBean bean = new QuestionAnswerBean();
@@ -426,7 +469,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .setTextColorCenter(Color.BLACK) //设置选中项文字颜色
                 .setContentTextSize(20)
                 .build();
-        pvOptions.setPicker(options1Items, options2Items, options3Items);//三级选择器
+        //三级选择器
+        pvOptions.setPicker(options1Items, options2Items, options3Items);
+        pvOptions.findViewById(R.id.btnCancel).setVisibility(View.INVISIBLE);
         pvOptions.show(mLinearLayout);
     }
 
@@ -475,5 +520,116 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //动态添加录音的AudioVoiceView
     private void addAudioVoiceView() {
         mLinearLayout.setVisibility(View.VISIBLE);
+        View view = LayoutInflater.from(this).inflate(R.layout.main_audio_voice_view, null);
+        TextView textView = view.findViewById(R.id.main_audio_voice_view_tv);
+        ImageView imageView = view.findViewById(R.id.main_audio_voice_view_iv);
+        imageView.setOnLongClickListener(view1 -> {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, RECORD_AUDIO);
+            } else {
+                startAudioVoice(textView, imageView);
+            }
+            return false;
+        });
+        mLinearLayout.addView(view);
+    }
+
+    //开始长按录音
+    private void startAudioVoice(TextView textView, ImageView imageView) {
+        QuestionAnswerBean bean = new QuestionAnswerBean();
+        bean.setId(15);
+        bean.setType("回答4");
+        mList.add(bean);
+        mMainAdapter.notifyItemInserted(mList.size());
+        mLinearLayout.removeAllViews();
+        mLinearLayout.setVisibility(View.GONE);
+    }
+
+    //动态添加时间选择器TimeSelectView
+    private void addTimeSelectView() {
+        mLinearLayout.setVisibility(View.VISIBLE);
+        TimePickerView timePickerView = new TimePickerBuilder(this, (date, v) -> {
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+            String time = format.format(date);
+            QuestionAnswerBean bean = new QuestionAnswerBean();
+            bean.setId(17);
+            bean.setType("回答1");
+            bean.setLabel(time);
+            mList.add(bean);
+            mMainAdapter.notifyItemInserted(mList.size());
+            mLinearLayout.removeAllViews();
+            mLinearLayout.setVisibility(View.GONE);
+        }).setTimeSelectChangeListener(date -> Log.i("pvTime", "onTimeSelectChanged"))
+                .setType(new boolean[]{true, true, true, false, false, false})
+                .isDialog(true) //默认设置false ，内部实现将DecorView 作为它的父控件。
+                .addOnCancelClickListener(view -> Log.i("pvTime", "onCancelClickListener"))
+                .build();
+
+        Dialog mDialog = timePickerView.getDialog();
+        if (mDialog != null) {
+            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.BOTTOM);
+            params.leftMargin = 0;
+            params.rightMargin = 0;
+            timePickerView.getDialogContainerLayout().setLayoutParams(params);
+
+            Window dialogWindow = mDialog.getWindow();
+            if (dialogWindow != null) {
+                //修改动画样式
+                dialogWindow.setWindowAnimations(com.bigkoo.pickerview.R.style.picker_view_slide_anim);
+                //改成Bottom,底部显示
+                dialogWindow.setGravity(Gravity.BOTTOM);
+                dialogWindow.setDimAmount(0.1f);
+            }
+        }
+
+        timePickerView.findViewById(R.id.btnCancel).setVisibility(View.INVISIBLE);
+        timePickerView.show(mLinearLayout);
+    }
+
+    //动态添加上传文件的UploadFileView
+    private void addUploadFileView() {
+        mLinearLayout.setVisibility(View.VISIBLE);
+        View view = LayoutInflater.from(this).inflate(R.layout.main_upload_file_view, null);
+        LinearLayout linearFile = view.findViewById(R.id.main_upload_file_view_file_ll);
+
+        linearFile.setOnClickListener(view1 -> {
+            QuestionAnswerBean bean = new QuestionAnswerBean();
+            bean.setId(19);
+            bean.setType("回答3");
+            mList.add(bean);
+            mMainAdapter.notifyItemInserted(mList.size());
+            mLinearLayout.removeAllViews();
+            mLinearLayout.setVisibility(View.GONE);
+        });
+
+        mLinearLayout.addView(view);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode) {
+            case RECORD_AUDIO:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this, "您可以开始发送语音了", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, "您将不能发送语音", Toast.LENGTH_SHORT).show();
+                }
+                break;
+        }
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            if ((System.currentTimeMillis() - mExitTime) > 2000) {
+                Toast.makeText(this, "再按一次退出程序", Toast.LENGTH_SHORT).show();
+                mExitTime = System.currentTimeMillis();
+            } else {
+                finish();
+            }
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
     }
 }
