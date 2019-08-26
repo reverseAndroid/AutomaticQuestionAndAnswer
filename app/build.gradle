@@ -45,4 +45,6 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.8.5'
     //自定义签名
     implementation 'com.github.gcacace:signature-pad:1.2.1'
+    //知乎相册
+    implementation 'com.zhihu.android:matisse:0.5.1'
 }

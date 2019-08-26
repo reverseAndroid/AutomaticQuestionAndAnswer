@@ -2,14 +2,23 @@ package com.module.questionnaire;
 
 import android.Manifest;
 import android.app.Dialog;
+import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.media.MediaPlayer;
+import android.media.MediaRecorder;
+import android.net.Uri;
 import android.os.Build;
+import android.os.Environment;
 import android.os.Handler;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -22,6 +31,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -31,6 +41,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RatingBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -48,12 +59,18 @@ import com.module.questionnaire.adapter.MainAdapter;
 import com.module.questionnaire.bean.JsonBean;
 import com.module.questionnaire.bean.QuestionAnswerBean;
 import com.module.questionnaire.utils.GetJsonDataUtil;
-import com.module.questionnaire.utils.StringUtil;
+import com.module.questionnaire.utils.GlideEngine;
+import com.module.questionnaire.utils.StringBitmapUtil;
+import com.zhihu.matisse.Matisse;
+import com.zhihu.matisse.MimeType;
 
 import org.json.JSONArray;
 
+import java.io.File;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, MainAdapter.ItemListener {
@@ -71,12 +88,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private MainAdapter mMainAdapter;
 
     private List<QuestionAnswerBean> mList = new ArrayList<>();
+    private Uri mUri;
     private List<JsonBean> options1Items = new ArrayList<>();
     private ArrayList<ArrayList<String>> options2Items = new ArrayList<>();
     private ArrayList<ArrayList<ArrayList<String>>> options3Items = new ArrayList<>();
+    private MediaRecorder mMediaRecorder;
+    private MediaPlayer mMediaPlayer;
     private long mExitTime;
 
-    private static final int RECORD_AUDIO = 1000;
+    private static final int WRITE_EXTERNAL_STORAGE = 1000;
+    private static final int OPEN_ALBUM = 1001;
+    private static final int CAMERA = 1003;
+    private static final int OPEN_CAMERA = 1004;
+    private static final int RECORD_AUDIO = 1005;
+    private static final int OPEN_FILE = 1006;
+
+    // 最大录音时长1000*60*10;
+    private static final int MAX_LENGTH = 1000 * 60 * 10;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -379,26 +407,50 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         LinearLayout linearCamera = view.findViewById(R.id.main_upload_photo_view_camera_ll);
 
         linearAlbum.setOnClickListener(view1 -> {
-            QuestionAnswerBean bean = new QuestionAnswerBean();
-            bean.setId(8);
-            bean.setType("回答3");
-            mList.add(bean);
-            mMainAdapter.notifyItemInserted(mList.size());
-            mLinearLayout.removeAllViews();
-            mLinearLayout.setVisibility(View.GONE);
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, WRITE_EXTERNAL_STORAGE);
+            } else {
+                Matisse.from(this)
+                        .choose(MimeType.ofImage())
+                        .countable(true)
+                        .maxSelectable(1)
+                        .restrictOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED)
+                        .thumbnailScale(0.85f)
+                        .capture(false)
+                        .imageEngine(new GlideEngine())
+                        .forResult(OPEN_ALBUM);
+            }
         });
 
         linearCamera.setOnClickListener(view1 -> {
-            QuestionAnswerBean bean = new QuestionAnswerBean();
-            bean.setId(8);
-            bean.setType("回答3");
-            mList.add(bean);
-            mMainAdapter.notifyItemInserted(mList.size());
-            mLinearLayout.removeAllViews();
-            mLinearLayout.setVisibility(View.GONE);
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
+                    ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
+                    ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE}, CAMERA);
+            } else {
+                openCamera();
+            }
         });
 
         mLinearLayout.addView(view);
+    }
+
+    private void openCamera() {
+        File file = new File(Environment.getExternalStorageDirectory(), "/question/images/" + System.currentTimeMillis() + ".jpg");
+        if (!file.getParentFile().exists()) {
+            file.getParentFile().mkdirs();
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            mUri = FileProvider.getUriForFile(this, "com.module.questionnaire.FileProvider", file);
+        } else {
+            mUri = Uri.fromFile(file);
+        }
+        Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        intent.setAction(MediaStore.ACTION_IMAGE_CAPTURE);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, mUri);
+        startActivityForResult(intent, OPEN_CAMERA);
     }
 
     //动态添加选择省市区的RegionalChoiceView
@@ -512,7 +564,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             QuestionAnswerBean bean = new QuestionAnswerBean();
             bean.setId(12);
             bean.setType("回答3");
-            bean.setLabel(StringUtil.BitMapToString(signatureBitmap));
+            bean.setLabel(StringBitmapUtil.BitMapToString(signatureBitmap));
             mList.add(bean);
             mMainAdapter.notifyItemInserted(mList.size());
             mLinearLayout.removeAllViews();
@@ -524,30 +576,70 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     //动态添加录音的AudioVoiceView
     private void addAudioVoiceView() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, RECORD_AUDIO);
+        }
         mLinearLayout.setVisibility(View.VISIBLE);
         View view = LayoutInflater.from(this).inflate(R.layout.main_audio_voice_view, null);
         TextView textView = view.findViewById(R.id.main_audio_voice_view_tv);
-        ImageView imageView = view.findViewById(R.id.main_audio_voice_view_iv);
-        imageView.setOnLongClickListener(view1 -> {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, RECORD_AUDIO);
-            } else {
-                startAudioVoice(textView, imageView);
-            }
-            return false;
+        RelativeLayout relativeLayout = view.findViewById(R.id.main_audio_voice_view_rl);
+//        ImageView imageView = view.findViewById(R.id.main_audio_voice_view_iv);
+
+        String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/question/audio" + System.currentTimeMillis() + ".mp4";
+        relativeLayout.setOnTouchListener((view1, motionEvent) -> {
+            startAudioVoice(textView, motionEvent, path);
+            return true;
         });
         mLinearLayout.addView(view);
     }
 
     //开始长按录音
-    private void startAudioVoice(TextView textView, ImageView imageView) {
-        QuestionAnswerBean bean = new QuestionAnswerBean();
-        bean.setId(15);
-        bean.setType("回答4");
-        mList.add(bean);
-        mMainAdapter.notifyItemInserted(mList.size());
-        mLinearLayout.removeAllViews();
-        mLinearLayout.setVisibility(View.GONE);
+    private void startAudioVoice(TextView textView, MotionEvent motionEvent, String path) {
+        switch (motionEvent.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                textView.setText("开始录音");
+                if (mMediaRecorder == null) {
+                    mMediaRecorder = new MediaRecorder();
+                }
+                try {
+                    /* ②setAudioSource/setVedioSource */
+                    mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);// 设置麦克风
+                    /* ②设置音频文件的编码：AAC/AMR_NB/AMR_MB/Default 声音的（波形）的采样 */
+                    mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.DEFAULT);
+                    /*
+                     * ②设置输出文件的格式：THREE_GPP/MPEG-4/RAW_AMR/Default THREE_GPP(3gp格式
+                     * ，H263视频/ARM音频编码)、MPEG-4、RAW_AMR(只支持音频且音频编码要求为AMR_NB)
+                     */
+                    mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+                    /* ③准备 */
+                    mMediaRecorder.setOutputFile(path);
+                    mMediaRecorder.setMaxDuration(MAX_LENGTH);
+                    mMediaRecorder.prepare();
+                    /* ④开始 */
+                    mMediaRecorder.start();
+                } catch (IllegalStateException | IOException e) {
+                    e.getMessage();
+                }
+                break;
+            case MotionEvent.ACTION_UP:
+                textView.setText("停止录音");
+                mMediaRecorder.stop();
+                mMediaRecorder.reset();
+                mMediaRecorder.release();
+                mMediaRecorder = null;
+
+                QuestionAnswerBean bean = new QuestionAnswerBean();
+                bean.setId(15);
+                bean.setType("回答4");
+                bean.setLabel(path);
+                mList.add(bean);
+                mMainAdapter.notifyItemInserted(mList.size());
+                mLinearLayout.removeAllViews();
+                mLinearLayout.setVisibility(View.GONE);
+                break;
+            default:
+                break;
+        }
     }
 
     //动态添加时间选择器TimeSelectView
@@ -598,28 +690,89 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         LinearLayout linearFile = view.findViewById(R.id.main_upload_file_view_file_ll);
 
         linearFile.setOnClickListener(view1 -> {
-            QuestionAnswerBean bean = new QuestionAnswerBean();
-            bean.setId(19);
-            bean.setType("回答3");
-            mList.add(bean);
-            mMainAdapter.notifyItemInserted(mList.size());
-            mLinearLayout.removeAllViews();
-            mLinearLayout.setVisibility(View.GONE);
+            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+            intent.setType("*/*");
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            startActivityForResult(intent, OPEN_FILE);
         });
 
         mLinearLayout.addView(view);
     }
 
     @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK) {
+            QuestionAnswerBean bean;
+            switch (requestCode) {
+                case OPEN_ALBUM:
+                    List<Uri> pathList = Matisse.obtainResult(data);
+                    String path = StringBitmapUtil.BitMapToString(StringBitmapUtil.UriToBitmap(this, pathList.get(0)));
+                    bean = new QuestionAnswerBean();
+                    bean.setId(8);
+                    bean.setType("回答3");
+                    bean.setLabel(path);
+                    mList.add(bean);
+                    mMainAdapter.notifyItemInserted(mList.size());
+                    mLinearLayout.removeAllViews();
+                    mLinearLayout.setVisibility(View.GONE);
+                    break;
+                case OPEN_CAMERA:
+                    Bitmap bitmap = StringBitmapUtil.UriToBitmap(this, mUri);
+                    bean = new QuestionAnswerBean();
+                    bean.setId(8);
+                    bean.setType("回答3");
+                    bean.setLabel(StringBitmapUtil.BitMapToString(bitmap));
+                    mList.add(bean);
+                    mMainAdapter.notifyItemInserted(mList.size());
+                    mLinearLayout.removeAllViews();
+                    mLinearLayout.setVisibility(View.GONE);
+                    break;
+                case OPEN_FILE:
+                    Uri uri = data.getData();
+                    bean = new QuestionAnswerBean();
+                    bean.setId(19);
+                    bean.setType("回答3");
+                    bean.setLabel(uri.getPath());
+                    mList.add(bean);
+                    mMainAdapter.notifyItemInserted(mList.size());
+                    mLinearLayout.removeAllViews();
+                    mLinearLayout.setVisibility(View.GONE);
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
+            case WRITE_EXTERNAL_STORAGE:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this, "您可以选择相册了", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, "您将不能选择相册", Toast.LENGTH_SHORT).show();
+                }
+                break;
+            case CAMERA:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED &&
+                        grantResults[1] == PackageManager.PERMISSION_GRANTED &&
+                        grantResults[2] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this, "您可以进行拍照了", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, "您将不能进行拍照", Toast.LENGTH_SHORT).show();
+                }
+                break;
             case RECORD_AUDIO:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     Toast.makeText(this, "您可以开始发送语音了", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(this, "您将不能发送语音", Toast.LENGTH_SHORT).show();
                 }
+                break;
+            default:
                 break;
         }
     }

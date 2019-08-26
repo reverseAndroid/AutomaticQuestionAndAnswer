@@ -13,13 +13,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.ldoublem.loadingviewlib.view.LVCircularJump;
 import com.module.questionnaire.R;
 import com.module.questionnaire.bean.QuestionAnswerBean;
-import com.module.questionnaire.utils.StringUtil;
+import com.module.questionnaire.utils.StringBitmapUtil;
 
 import java.io.IOException;
 import java.util.List;
@@ -218,7 +219,10 @@ public class MainAdapter extends RecyclerView.Adapter {
     private void bindAnswerHolder3(RecyclerView.ViewHolder viewHolder, int position) {
         AnswerHolder3 holder = (AnswerHolder3) viewHolder;
         Glide.with(mContext).load(R.mipmap.ic_launcher).apply(new RequestOptions().circleCrop()).into(holder.imageView);
-        Glide.with(mContext).load(StringUtil.StringToBitMap(mList.get(position).getLabel())).apply(new RequestOptions().error(R.mipmap.ic_launcher)).into(holder.imagePhoto);
+        Glide.with(mContext).load(StringBitmapUtil.StringToBitMap(mList.get(position).getLabel())).apply(new RequestOptions().error(R.mipmap.ic_launcher)).into(holder.imagePhoto);
+        if (mList.get(position).getId() == 19) {
+            Toast.makeText(mContext, mList.get(position).getLabel(), Toast.LENGTH_SHORT).show();
+        }
         if (mItemListener != null) {
             Handler handler = new Handler(Looper.getMainLooper());
             handler.postDelayed(() -> mItemListener.onInteraction(mList.get(position).getId()), 500);
@@ -236,8 +240,7 @@ public class MainAdapter extends RecyclerView.Adapter {
         //将imageAudioPlayer的背景喇叭图赋值给animationDrawable
         AnimationDrawable animationDrawable = (AnimationDrawable) holder.imageAudioPlayer.getDrawable();
         try {
-            AssetFileDescriptor fd = mContext.getAssets().openFd("test.mp3");
-            mediaPlayer.setDataSource(fd.getFileDescriptor(), fd.getStartOffset(), fd.getLength());
+            mediaPlayer.setDataSource(mList.get(position).getLabel());
             mediaPlayer.prepare();
         } catch (IOException e) {
             e.printStackTrace();
@@ -250,8 +253,7 @@ public class MainAdapter extends RecyclerView.Adapter {
                     animationDrawable.start();
                     //重新加载音频文件，如果不重新加载，无法再次播放(等到真实环境，这里是网络资源文件，需要使用通过异步的方式装载媒体资源mediaPlayer.prepareAsync())
                     if (isInit[0]) {
-                        AssetFileDescriptor fd = mContext.getAssets().openFd("test.mp3");
-                        mediaPlayer.setDataSource(fd.getFileDescriptor(), fd.getStartOffset(), fd.getLength());
+                        mediaPlayer.setDataSource(mList.get(position).getLabel());
                         mediaPlayer.prepare();
                     }
                     mediaPlayer.start();

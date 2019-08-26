@@ -1,12 +1,15 @@
 package com.module.questionnaire.utils;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.util.Base64;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
 
-public class StringUtil {
+public class StringBitmapUtil {
 
     public static String BitMapToString(Bitmap bitmap) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -25,5 +28,15 @@ public class StringUtil {
             e.getMessage();
             return null;
         }
+    }
+
+    public static Bitmap UriToBitmap(Context context, Uri uri) {
+        try {
+            Bitmap bitmap = BitmapFactory.decodeStream(context.getContentResolver().openInputStream(uri));
+            return bitmap;
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }
