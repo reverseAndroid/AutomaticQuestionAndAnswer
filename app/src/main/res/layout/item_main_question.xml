@@ -14,26 +14,34 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <FrameLayout
-        android:layout_width="wrap_content"
+    <RelativeLayout
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="10dp"
-        android:background="@drawable/item_main_question_bg"
-        android:padding="10dp"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/item_main_question_avatar_iv"
         app:layout_constraintTop_toTopOf="parent">
 
-        <TextView
-            android:id="@+id/item_main_question_content_tv"
+        <FrameLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/black" />
+            android:layout_alignParentStart="true"
+            android:layout_marginStart="10dp"
+            android:background="@drawable/item_main_question_bg"
+            android:padding="10dp">
 
-        <com.ldoublem.loadingviewlib.view.LVCircularJump
-            android:id="@+id/item_main_question_loading_lvcj"
-            android:layout_width="40dp"
-            android:layout_height="20dp" />
+            <TextView
+                android:id="@+id/item_main_question_content_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/black" />
 
-    </FrameLayout>
+            <com.ldoublem.loadingviewlib.view.LVCircularJump
+                android:id="@+id/item_main_question_loading_lvcj"
+                android:layout_width="40dp"
+                android:layout_height="20dp" />
+
+        </FrameLayout>
+
+    </RelativeLayout>
 
 </android.support.constraint.ConstraintLayout>

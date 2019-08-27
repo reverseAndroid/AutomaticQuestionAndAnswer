@@ -2,18 +2,22 @@ package com.module.questionnaire;
 
 import android.Manifest;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.media.MediaPlayer;
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationManager;
 import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -56,11 +60,14 @@ import com.google.gson.Gson;
 import com.jaeger.library.StatusBarUtil;
 import com.module.questionnaire.adapter.AddRecyclerViewAdapter;
 import com.module.questionnaire.adapter.MainAdapter;
+import com.module.questionnaire.adapter.MultipleSelectionViewAdapter;
 import com.module.questionnaire.bean.JsonBean;
+import com.module.questionnaire.bean.MultipleSelectionBean;
 import com.module.questionnaire.bean.QuestionAnswerBean;
 import com.module.questionnaire.utils.GetJsonDataUtil;
 import com.module.questionnaire.utils.GlideEngine;
 import com.module.questionnaire.utils.StringBitmapUtil;
+import com.module.questionnaire.widget.DrawableEditText;
 import com.zhihu.matisse.Matisse;
 import com.zhihu.matisse.MimeType;
 
@@ -70,10 +77,9 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, MainAdapter.ItemListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, MainAdapter.ItemUpdateListener {
 
     private Toolbar mToolbar;
     private TextView mTextTitle;
@@ -93,7 +99,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ArrayList<ArrayList<String>> options2Items = new ArrayList<>();
     private ArrayList<ArrayList<ArrayList<String>>> options3Items = new ArrayList<>();
     private MediaRecorder mMediaRecorder;
-    private MediaPlayer mMediaPlayer;
     private long mExitTime;
 
     private static final int WRITE_EXTERNAL_STORAGE = 1000;
@@ -102,6 +107,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final int OPEN_CAMERA = 1004;
     private static final int RECORD_AUDIO = 1005;
     private static final int OPEN_FILE = 1006;
+    private static final int GPS = 1007;
+    private static final int SETTING_GPS = 1008;
 
     // 最大录音时长1000*60*10;
     private static final int MAX_LENGTH = 1000 * 60 * 10;
@@ -161,7 +168,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         mMainAdapter = new MainAdapter(this, mList);
         mRecyclerView.setAdapter(mMainAdapter);
-        mMainAdapter.setOnItemListener(this);
+        mMainAdapter.setItemUpdateListener(this);
         mRecyclerView.setVisibility(View.VISIBLE);
     }
 
@@ -292,9 +299,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 bean = new QuestionAnswerBean();
                 bean.setId(20);
                 bean.setType("问题1");
-                bean.setLabel("暂时完毕");
+                bean.setLabel("表单问题");
                 mList.add(bean);
                 mMainAdapter.notifyItemInserted(mList.size());
+                break;
+            case 20:
+                addFormView();
+                break;
+            case 21:
+                bean = new QuestionAnswerBean();
+                bean.setId(22);
+                bean.setType("问题1");
+                bean.setLabel("多选问题");
+                mList.add(bean);
+                mMainAdapter.notifyItemInserted(mList.size());
+                break;
+            case 22:
+                addMultipleSelectionView();
+                break;
+            case 23:
+                bean = new QuestionAnswerBean();
+                bean.setId(24);
+                bean.setType("问题1");
+                bean.setLabel("上传定位");
+                mList.add(bean);
+                mMainAdapter.notifyItemInserted(mList.size());
+                break;
+            case 24:
+                uploadPosition();
                 break;
             default:
                 break;
@@ -699,6 +731,144 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mLinearLayout.addView(view);
     }
 
+    //动态添加表单的FormView
+    private void addFormView() {
+        mLinearLayout.setVisibility(View.VISIBLE);
+        View view = LayoutInflater.from(this).inflate(R.layout.main_form_view, null);
+        DrawableEditText editName = view.findViewById(R.id.main_form_view_name_et);
+        editName.setOnDrawableRightListener(() -> editName.setText(""));
+        DrawableEditText editPhone = view.findViewById(R.id.main_form_view_phone_et);
+        editPhone.setOnDrawableRightListener(() -> editPhone.setText(""));
+        DrawableEditText editAddress = view.findViewById(R.id.main_form_view_address_et);
+        editAddress.setOnDrawableRightListener(() -> editAddress.setText(""));
+        TextView textConfirm = view.findViewById(R.id.main_form_view_confirm_tv);
+
+        textConfirm.setOnClickListener(view1 -> {
+            if (TextUtils.isEmpty(editName.getText())) {
+                Toast.makeText(this, "姓名不能为空", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            if (TextUtils.isEmpty(editPhone.getText())) {
+                Toast.makeText(this, "手机号码不能为空", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            if (TextUtils.isEmpty(editAddress.getText())) {
+                Toast.makeText(this, "家庭住址不能为空", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            QuestionAnswerBean bean = new QuestionAnswerBean();
+            bean.setId(21);
+            bean.setType("回答1");
+            bean.setLabel("姓名:" + editName.getText().toString() + "  手机号码:" + editPhone.getText().toString() + "  家庭住址:" + editAddress.getText().toString());
+            mList.add(bean);
+            mMainAdapter.notifyItemInserted(mList.size());
+            mLinearLayout.removeAllViews();
+            mLinearLayout.setVisibility(View.GONE);
+        });
+
+        mLinearLayout.addView(view);
+    }
+
+    //动态添加多选的MultipleSelectionView
+    private void addMultipleSelectionView() {
+        mLinearLayout.setVisibility(View.VISIBLE);
+        View view = LayoutInflater.from(this).inflate(R.layout.main_multiple_selection_view, null);
+        RecyclerView recyclerView = view.findViewById(R.id.main_multiple_selection_rv);
+        TextView textView = view.findViewById(R.id.main_multiple_selection_confirm_tv);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        layoutManager.setOrientation(OrientationHelper.VERTICAL);
+        recyclerView.setLayoutManager(layoutManager);
+
+        List<MultipleSelectionBean> list = new ArrayList<>();
+        for (int i = 0; i < 8; i++) {
+            MultipleSelectionBean bean = new MultipleSelectionBean();
+            bean.setTitle("多选项" + i);
+            bean.setSelect(false);
+            list.add(bean);
+        }
+
+        MultipleSelectionViewAdapter adapter = new MultipleSelectionViewAdapter(this, list);
+        recyclerView.setAdapter(adapter);
+        adapter.setOnItemClickListener((i, isSelection) -> {
+            list.get(i).setSelect(isSelection);
+            adapter.notifyItemChanged(i);
+        });
+
+        textView.setOnClickListener(view1 -> {
+            QuestionAnswerBean bean = new QuestionAnswerBean();
+            bean.setId(23);
+            bean.setType("回答1");
+            bean.setLabel(new Gson().toJson(list));
+            mList.add(bean);
+            mMainAdapter.notifyItemInserted(mList.size());
+            mLinearLayout.removeAllViews();
+            mLinearLayout.setVisibility(View.GONE);
+        });
+
+        mLinearLayout.addView(view);
+    }
+
+    //上传定位
+    private void uploadPosition() {
+        LocationManager lm = (LocationManager) this.getSystemService(LOCATION_SERVICE);
+        boolean ok = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        if (ok) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                    ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            } else {
+                getLocation();
+            }
+        } else {
+            Toast.makeText(this, "系统检测到未开启GPS定位服务,请开启", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+            startActivityForResult(intent, SETTING_GPS);
+        }
+    }
+
+    //获取当前定位
+    private void getLocation() {
+        //获取位置管理服务
+        LocationManager locationManager;
+        String serviceName = Context.LOCATION_SERVICE;
+        locationManager = (LocationManager) this.getSystemService(serviceName);
+        //查找到服务信息
+        Criteria criteria = new Criteria();
+        //高精度
+        criteria.setAccuracy(Criteria.ACCURACY_FINE);
+        criteria.setAltitudeRequired(false);
+        criteria.setBearingRequired(false);
+        criteria.setCostAllowed(true);
+        //低功耗
+        criteria.setPowerRequirement(Criteria.POWER_LOW);
+        //获取GPS信息
+        String provider = locationManager.getBestProvider(criteria, true);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        Location location = locationManager.getLastKnownLocation(provider); // 通过GPS获取位置
+        updateLocation(location);
+    }
+
+    private void updateLocation(Location location) {
+        if (location != null) {
+            double latitude = location.getLatitude();
+            double longitude = location.getLongitude();
+            Log.e("MainActivity", "latitude:   " + latitude + "              " + "longitude:   " + longitude);
+        } else {
+            Log.e("MainActivity", "无法获取到位置信息");
+        }
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -739,6 +909,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     mLinearLayout.removeAllViews();
                     mLinearLayout.setVisibility(View.GONE);
                     break;
+                case SETTING_GPS:
+                    uploadPosition();
+                    break;
                 default:
                     break;
             }
@@ -772,13 +945,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Toast.makeText(this, "您将不能发送语音", Toast.LENGTH_SHORT).show();
                 }
                 break;
+            case GPS:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this, "您已经获取定位权限了", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, "您将不能获取定位", Toast.LENGTH_SHORT).show();
+                }
+                break;
             default:
                 break;
         }
     }
 
     @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
+    public boolean onKeyDown(int keyCode, KeyEvent motionEvent) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             if ((System.currentTimeMillis() - mExitTime) > 2000) {
                 Toast.makeText(this, "再按一次退出程序", Toast.LENGTH_SHORT).show();
@@ -788,6 +968,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
             return true;
         }
-        return super.onKeyDown(keyCode, event);
+        return super.onKeyDown(keyCode, motionEvent);
     }
 }

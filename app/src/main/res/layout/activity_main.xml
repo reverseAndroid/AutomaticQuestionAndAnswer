@@ -51,11 +51,11 @@
         android:id="@+id/main_nsv"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:background="@color/white"
         android:fillViewport="true"
         android:overScrollMode="never"
         android:scrollbars="none"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:background="@color/bg"
+        app:layout_constraintBottom_toTopOf="@id/main_answer_option_ll"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/layout_title_abl">
@@ -120,15 +120,16 @@
                 android:paddingBottom="20dp"
                 android:visibility="gone" />
 
-            <LinearLayout
-                android:id="@+id/main_answer_option_ll"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:visibility="gone" />
-
         </LinearLayout>
 
     </android.support.v4.widget.NestedScrollView>
+
+    <LinearLayout
+        android:id="@+id/main_answer_option_ll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent" />
 
 </android.support.constraint.ConstraintLayout>

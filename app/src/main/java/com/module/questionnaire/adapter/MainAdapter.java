@@ -39,14 +39,14 @@ public class MainAdapter extends RecyclerView.Adapter {
      * adapter监听
      * onInteraction是作为问答方数据加载完毕后，通知回答方做出反应的接口
      */
-    private ItemListener mItemListener;
+    private ItemUpdateListener mItemUpdateListener;
 
-    public interface ItemListener {
+    public interface ItemUpdateListener {
         void onInteraction(int id);
     }
 
-    public void setOnItemListener(ItemListener itemListener) {
-        this.mItemListener = itemListener;
+    public void setItemUpdateListener(ItemUpdateListener itemUpdateListener) {
+        this.mItemUpdateListener = itemUpdateListener;
     }
 
     @NonNull
@@ -111,8 +111,8 @@ public class MainAdapter extends RecyclerView.Adapter {
         holder.mLoadingView.startAnim();
         Handler handler = new Handler(Looper.getMainLooper());
         handler.postDelayed(() -> {
-            if (mItemListener != null) {
-                mItemListener.onInteraction(mList.get(position).getId());
+            if (mItemUpdateListener != null) {
+                mItemUpdateListener.onInteraction(mList.get(position).getId());
             }
 
             holder.mLoadingView.stopAnim();
@@ -136,8 +136,8 @@ public class MainAdapter extends RecyclerView.Adapter {
         holder.mLoadingView.startAnim();
         Handler handler = new Handler(Looper.getMainLooper());
         handler.postDelayed(() -> {
-            if (mItemListener != null) {
-                mItemListener.onInteraction(mList.get(position).getId());
+            if (mItemUpdateListener != null) {
+                mItemUpdateListener.onInteraction(mList.get(position).getId());
             }
 
             if (position == 0) {
@@ -205,9 +205,9 @@ public class MainAdapter extends RecyclerView.Adapter {
         AnswerHolder1 holder = (AnswerHolder1) viewHolder;
         Glide.with(mContext).load(R.mipmap.ic_launcher).apply(new RequestOptions().circleCrop()).into(holder.imageView);
         holder.textView.setText(mList.get(position).getLabel());
-        if (mItemListener != null) {
+        if (mItemUpdateListener != null) {
             Handler handler = new Handler(Looper.getMainLooper());
-            handler.postDelayed(() -> mItemListener.onInteraction(mList.get(position).getId()), 500);
+            handler.postDelayed(() -> mItemUpdateListener.onInteraction(mList.get(position).getId()), 500);
         }
     }
 
@@ -223,9 +223,9 @@ public class MainAdapter extends RecyclerView.Adapter {
         if (mList.get(position).getId() == 19) {
             Toast.makeText(mContext, mList.get(position).getLabel(), Toast.LENGTH_SHORT).show();
         }
-        if (mItemListener != null) {
+        if (mItemUpdateListener != null) {
             Handler handler = new Handler(Looper.getMainLooper());
-            handler.postDelayed(() -> mItemListener.onInteraction(mList.get(position).getId()), 500);
+            handler.postDelayed(() -> mItemUpdateListener.onInteraction(mList.get(position).getId()), 500);
         }
     }
 
@@ -279,9 +279,9 @@ public class MainAdapter extends RecyclerView.Adapter {
             }
         });
 
-        if (mItemListener != null) {
+        if (mItemUpdateListener != null) {
             Handler handler = new Handler(Looper.getMainLooper());
-            handler.postDelayed(() -> mItemListener.onInteraction(mList.get(position).getId()), 500);
+            handler.postDelayed(() -> mItemUpdateListener.onInteraction(mList.get(position).getId()), 500);
         }
     }
 

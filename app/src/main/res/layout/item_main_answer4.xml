@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginStart="80dp"
-    android:layout_marginTop="5dp">
+    android:layout_marginTop="20dp">
 
     <ImageView
         android:id="@+id/item_main_answer4_avatar_iv"
@@ -15,26 +15,35 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <RelativeLayout
-        android:layout_width="80dp"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="10dp"
-        android:background="@drawable/item_main_answer_bg"
-        android:padding="10dp"
         app:layout_constraintEnd_toStartOf="@id/item_main_answer4_avatar_iv"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <TextView
-            android:id="@+id/item_main_answer4_content_tv"
+        <FrameLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"
-            android:textColor="@color/black" />
+            android:layout_alignParentEnd="true"
+            android:layout_marginStart="10dp"
+            android:background="@drawable/item_main_answer_bg"
+            android:padding="10dp">
 
-        <ImageView
-            android:id="@+id/item_main_answer4_audio_player_iv"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:layout_alignParentEnd="true" />
+            <TextView
+                android:id="@+id/item_main_answer4_content_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start"
+                android:layout_marginEnd="60dp"
+                android:textColor="@color/black" />
+
+            <ImageView
+                android:id="@+id/item_main_answer4_audio_player_iv"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="end" />
+
+        </FrameLayout>
 
     </RelativeLayout>
 
