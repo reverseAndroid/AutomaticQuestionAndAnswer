@@ -6,6 +6,7 @@
     <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>
     <color name="gray">#EFEDEF</color>
-    <color name="bg">#F5F5F5</color>
+    <color name="bg">#F1F3F6</color>
     <color name="btn">#4D51E9</color>
+    <color name="click_background">#8B8989</color>
 </resources>

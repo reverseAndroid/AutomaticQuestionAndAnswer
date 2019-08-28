@@ -2,7 +2,6 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/white"
     android:orientation="vertical">
 
     <View
@@ -20,6 +19,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:background="@drawable/ripple_white_mask"
             android:gravity="center"
             android:paddingTop="15dp"
             android:paddingBottom="15dp"
@@ -35,6 +35,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:background="@drawable/ripple_white_mask"
             android:gravity="center"
             android:paddingTop="15dp"
             android:paddingBottom="15dp"

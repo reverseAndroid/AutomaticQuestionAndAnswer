@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.location.Criteria;
@@ -16,6 +17,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
+import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
@@ -61,9 +63,11 @@ import com.jaeger.library.StatusBarUtil;
 import com.module.questionnaire.adapter.AddRecyclerViewAdapter;
 import com.module.questionnaire.adapter.MainAdapter;
 import com.module.questionnaire.adapter.MultipleSelectionViewAdapter;
+import com.module.questionnaire.bean.ContactBean;
 import com.module.questionnaire.bean.JsonBean;
 import com.module.questionnaire.bean.MultipleSelectionBean;
 import com.module.questionnaire.bean.QuestionAnswerBean;
+import com.module.questionnaire.utils.GetAddressUtil;
 import com.module.questionnaire.utils.GetJsonDataUtil;
 import com.module.questionnaire.utils.GlideEngine;
 import com.module.questionnaire.utils.StringBitmapUtil;
@@ -109,6 +113,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final int OPEN_FILE = 1006;
     private static final int GPS = 1007;
     private static final int SETTING_GPS = 1008;
+    private static final int READ_CONTACTS = 1009;
 
     // 最大录音时长1000*60*10;
     private static final int MAX_LENGTH = 1000 * 60 * 10;
@@ -328,13 +333,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case 24:
                 uploadPosition();
                 break;
+            case 25:
+                bean = new QuestionAnswerBean();
+                bean.setId(26);
+                bean.setType("问题1");
+                bean.setLabel("上传通讯录");
+                mList.add(bean);
+                mMainAdapter.notifyItemInserted(mList.size());
+                break;
+            case 26:
+                uploadContact();
+                break;
+            case 27:
+                bean = new QuestionAnswerBean();
+                bean.setId(28);
+                bean.setType("问题1");
+                bean.setLabel("暂无问题");
+                mList.add(bean);
+                mMainAdapter.notifyItemInserted(mList.size());
+                break;
             default:
                 break;
         }
-
-        //addView完之后，不等于马上就会显示，而是在队列中等待处理，虽然很快，但是如果立即调用fullScroll，view可能还没有显示出来，所以会失败，应该通过handler在新线程中更新。
-        Handler handler = new Handler();
-        handler.post(() -> mNestedScrollView.fullScroll(NestedScrollView.FOCUS_DOWN));
+        updateNestScrollView();
     }
 
     //动态添加单选的RecyclerView
@@ -366,6 +387,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mMainAdapter.notifyItemInserted(mList.size());
             mLinearLayout.removeAllViews();
             mLinearLayout.setVisibility(View.GONE);
+            updateNestScrollView();
         });
 
         mLinearLayout.addView(view);
@@ -386,6 +408,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mMainAdapter.notifyItemInserted(mList.size());
             mLinearLayout.removeAllViews();
             mLinearLayout.setVisibility(View.GONE);
+            updateNestScrollView();
         });
         TextView textRight = view.findViewById(R.id.main_radio_view_right_tv);
         textRight.setText("我是33333");
@@ -398,6 +421,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mMainAdapter.notifyItemInserted(mList.size());
             mLinearLayout.removeAllViews();
             mLinearLayout.setVisibility(View.GONE);
+            updateNestScrollView();
         });
         mLinearLayout.addView(view);
     }
@@ -406,14 +430,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void addEditTextView() {
         mLinearLayout.setVisibility(View.VISIBLE);
         View view = LayoutInflater.from(this).inflate(R.layout.main_edit_view, null);
-        TextView textTitle = view.findViewById(R.id.main_edit_view_title_tv);
-        TextView textDetermine = view.findViewById(R.id.main_edit_view_determine_tv);
+        ImageView imageView = view.findViewById(R.id.main_edit_view_determine_iv);
         EditText editText = view.findViewById(R.id.main_edit_view_input_et);
 
         //这里的“请输入姓名”是一个变量,跟随接口获取而改变
-        textTitle.setText("请输入姓名");
-        textDetermine.setText("确定");
-        textDetermine.setOnClickListener(view1 -> {
+        editText.setHint("请输入姓名");
+        imageView.setOnClickListener(view1 -> {
             if (!TextUtils.isEmpty(editText.getText())) {
                 QuestionAnswerBean bean = new QuestionAnswerBean();
                 bean.setId(6);
@@ -423,6 +445,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 mMainAdapter.notifyItemInserted(mList.size());
                 mLinearLayout.removeAllViews();
                 mLinearLayout.setVisibility(View.GONE);
+                updateNestScrollView();
             } else {
                 Toast.makeText(this, "不能为空", Toast.LENGTH_SHORT).show();
             }
@@ -553,6 +576,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mMainAdapter.notifyItemInserted(mList.size());
             mLinearLayout.removeAllViews();
             mLinearLayout.setVisibility(View.GONE);
+            updateNestScrollView();
         }).setTitleText("城市选择")
                 .setDividerColor(Color.BLACK)
                 .setTextColorCenter(Color.BLACK) //设置选中项文字颜色
@@ -601,6 +625,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mMainAdapter.notifyItemInserted(mList.size());
             mLinearLayout.removeAllViews();
             mLinearLayout.setVisibility(View.GONE);
+            updateNestScrollView();
         });
 
         mLinearLayout.addView(view);
@@ -668,6 +693,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 mMainAdapter.notifyItemInserted(mList.size());
                 mLinearLayout.removeAllViews();
                 mLinearLayout.setVisibility(View.GONE);
+                updateNestScrollView();
                 break;
             default:
                 break;
@@ -688,6 +714,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mMainAdapter.notifyItemInserted(mList.size());
             mLinearLayout.removeAllViews();
             mLinearLayout.setVisibility(View.GONE);
+            updateNestScrollView();
         }).setTimeSelectChangeListener(date -> Log.i("pvTime", "onTimeSelectChanged"))
                 .setType(new boolean[]{true, true, true, false, false, false})
                 .isDialog(true) //默认设置false ，内部实现将DecorView 作为它的父控件。
@@ -767,6 +794,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mMainAdapter.notifyItemInserted(mList.size());
             mLinearLayout.removeAllViews();
             mLinearLayout.setVisibility(View.GONE);
+            updateNestScrollView();
         });
 
         mLinearLayout.addView(view);
@@ -806,6 +834,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mMainAdapter.notifyItemInserted(mList.size());
             mLinearLayout.removeAllViews();
             mLinearLayout.setVisibility(View.GONE);
+            updateNestScrollView();
         });
 
         mLinearLayout.addView(view);
@@ -816,10 +845,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         LocationManager lm = (LocationManager) this.getSystemService(LOCATION_SERVICE);
         boolean ok = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
         if (ok) {
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
                     ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, GPS);
             } else {
-                getLocation();
+                getLatitudeLongitude();
             }
         } else {
             Toast.makeText(this, "系统检测到未开启GPS定位服务,请开启", Toast.LENGTH_SHORT).show();
@@ -828,8 +858,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    //获取当前定位
-    private void getLocation() {
+    //获取经纬度
+    private void getLatitudeLongitude() {
         //获取位置管理服务
         LocationManager locationManager;
         String serviceName = Context.LOCATION_SERVICE;
@@ -856,16 +886,64 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return;
         }
         Location location = locationManager.getLastKnownLocation(provider); // 通过GPS获取位置
-        updateLocation(location);
+        setLatitudeLongitudeToLocation(location);
     }
 
-    private void updateLocation(Location location) {
+    //经纬度转换成地点
+    private void setLatitudeLongitudeToLocation(Location location) {
         if (location != null) {
             double latitude = location.getLatitude();
             double longitude = location.getLongitude();
-            Log.e("MainActivity", "latitude:   " + latitude + "              " + "longitude:   " + longitude);
+            String position = GetAddressUtil.getAddress(this, latitude, longitude);
+            QuestionAnswerBean bean = new QuestionAnswerBean();
+            bean.setId(25);
+            bean.setType("回答1");
+            bean.setLabel(position);
+            mList.add(bean);
+            mMainAdapter.notifyItemInserted(mList.size());
+            mLinearLayout.removeAllViews();
+            mLinearLayout.setVisibility(View.GONE);
+            updateNestScrollView();
         } else {
             Log.e("MainActivity", "无法获取到位置信息");
+        }
+    }
+
+    //上传通讯录
+    private void uploadContact() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_CONTACTS}, READ_CONTACTS);
+        } else {
+            readContacts();
+        }
+    }
+
+    //读取联系人
+    private void readContacts() {
+        List<ContactBean> list = new ArrayList<>();
+        try (Cursor cursor = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, null, null, null)) {
+            if (cursor != null) {
+                while (cursor.moveToNext()) {
+                    String displayName = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+                    String number = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                    ContactBean bean = new ContactBean();
+                    bean.setName(displayName);
+                    bean.setPhone(number);
+                    list.add(bean);
+                }
+            }
+
+            QuestionAnswerBean bean = new QuestionAnswerBean();
+            bean.setId(27);
+            bean.setType("回答1");
+            bean.setLabel(new Gson().toJson(list));
+            mList.add(bean);
+            mMainAdapter.notifyItemInserted(mList.size());
+            mLinearLayout.removeAllViews();
+            mLinearLayout.setVisibility(View.GONE);
+            updateNestScrollView();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -886,6 +964,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     mMainAdapter.notifyItemInserted(mList.size());
                     mLinearLayout.removeAllViews();
                     mLinearLayout.setVisibility(View.GONE);
+                    updateNestScrollView();
                     break;
                 case OPEN_CAMERA:
                     Bitmap bitmap = StringBitmapUtil.UriToBitmap(this, mUri);
@@ -897,6 +976,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     mMainAdapter.notifyItemInserted(mList.size());
                     mLinearLayout.removeAllViews();
                     mLinearLayout.setVisibility(View.GONE);
+                    updateNestScrollView();
                     break;
                 case OPEN_FILE:
                     Uri uri = data.getData();
@@ -908,6 +988,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     mMainAdapter.notifyItemInserted(mList.size());
                     mLinearLayout.removeAllViews();
                     mLinearLayout.setVisibility(View.GONE);
+                    updateNestScrollView();
                     break;
                 case SETTING_GPS:
                     uploadPosition();
@@ -946,15 +1027,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 break;
             case GPS:
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED &&
+                        grantResults[1] == PackageManager.PERMISSION_GRANTED) {
                     Toast.makeText(this, "您已经获取定位权限了", Toast.LENGTH_SHORT).show();
+                    uploadPosition();
                 } else {
                     Toast.makeText(this, "您将不能获取定位", Toast.LENGTH_SHORT).show();
+                }
+                break;
+            case READ_CONTACTS:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this, "您已经获取通讯录权限了", Toast.LENGTH_SHORT).show();
+                    uploadContact();
+                } else {
+                    Toast.makeText(this, "您将不能获取通讯录", Toast.LENGTH_SHORT).show();
                 }
                 break;
             default:
                 break;
         }
+    }
+
+    //addView完之后，不等于马上就会显示，而是在队列中等待处理，虽然很快，但是如果立即调用fullScroll，view可能还没有显示出来，所以会失败，应该通过handler在新线程中更新。
+    private void updateNestScrollView() {
+        Handler handler = new Handler();
+        handler.post(() -> {
+            mNestedScrollView.fullScroll(NestedScrollView.FOCUS_DOWN);
+            handler.removeCallbacksAndMessages(null);
+        });
     }
 
     @Override
