@@ -633,9 +633,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     //动态添加录音的AudioVoiceView
     private void addAudioVoiceView() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, RECORD_AUDIO);
-        }
         mLinearLayout.setVisibility(View.VISIBLE);
         View view = LayoutInflater.from(this).inflate(R.layout.main_audio_voice_view, null);
         TextView textView = view.findViewById(R.id.main_audio_voice_view_tv);
@@ -644,7 +641,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/question/audio" + System.currentTimeMillis() + ".mp4";
         relativeLayout.setOnTouchListener((view1, motionEvent) -> {
-            startAudioVoice(textView, motionEvent, path);
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, RECORD_AUDIO);
+            } else {
+                startAudioVoice(textView, motionEvent, path);
+            }
             return true;
         });
         mLinearLayout.addView(view);
@@ -905,6 +906,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mLinearLayout.setVisibility(View.GONE);
             updateNestScrollView();
         } else {
+            QuestionAnswerBean bean = new QuestionAnswerBean();
+            bean.setId(25);
+            bean.setType("回答1");
+            bean.setLabel("您没有同意上报位置");
+            mList.add(bean);
+            mMainAdapter.notifyItemInserted(mList.size());
+            mLinearLayout.removeAllViews();
+            mLinearLayout.setVisibility(View.GONE);
+            updateNestScrollView();
             Log.e("MainActivity", "无法获取到位置信息");
         }
     }
@@ -1033,6 +1043,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     uploadPosition();
                 } else {
                     Toast.makeText(this, "您将不能获取定位", Toast.LENGTH_SHORT).show();
+                    QuestionAnswerBean bean = new QuestionAnswerBean();
+                    bean.setId(25);
+                    bean.setType("回答1");
+                    bean.setLabel("您没有同意上报位置");
+                    mList.add(bean);
+                    mMainAdapter.notifyItemInserted(mList.size());
+                    mLinearLayout.removeAllViews();
+                    mLinearLayout.setVisibility(View.GONE);
+                    updateNestScrollView();
                 }
                 break;
             case READ_CONTACTS:
@@ -1041,6 +1060,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     uploadContact();
                 } else {
                     Toast.makeText(this, "您将不能获取通讯录", Toast.LENGTH_SHORT).show();
+                    QuestionAnswerBean bean = new QuestionAnswerBean();
+                    bean.setId(27);
+                    bean.setType("回答1");
+                    bean.setLabel("您没有同意获取通讯录");
+                    mList.add(bean);
+                    mMainAdapter.notifyItemInserted(mList.size());
+                    mLinearLayout.removeAllViews();
+                    mLinearLayout.setVisibility(View.GONE);
+                    updateNestScrollView();
                 }
                 break;
             default:
