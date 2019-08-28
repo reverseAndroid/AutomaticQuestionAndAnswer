@@ -11,6 +11,7 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.location.Criteria;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.media.MediaRecorder;
 import android.net.Uri;
@@ -103,6 +104,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ArrayList<ArrayList<String>> options2Items = new ArrayList<>();
     private ArrayList<ArrayList<ArrayList<String>>> options3Items = new ArrayList<>();
     private MediaRecorder mMediaRecorder;
+    //如果有好几种定位提供方式，当前只取第一次定位到的地址，后面的不管
+    private boolean mIsLocation = false;
     private long mExitTime;
 
     private static final int WRITE_EXTERNAL_STORAGE = 1000;
@@ -167,6 +170,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void initData() {
         QuestionAnswerBean bean = new QuestionAnswerBean();
         bean.setId(0);
+//        bean.setId(12);
         bean.setType("问题1");
         bean.setLabel("问卷调查功能演示");
         mList.add(bean);
@@ -637,14 +641,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         View view = LayoutInflater.from(this).inflate(R.layout.main_audio_voice_view, null);
         TextView textView = view.findViewById(R.id.main_audio_voice_view_tv);
         RelativeLayout relativeLayout = view.findViewById(R.id.main_audio_voice_view_rl);
-//        ImageView imageView = view.findViewById(R.id.main_audio_voice_view_iv);
+        ImageView imageView = view.findViewById(R.id.main_audio_voice_view_iv);
 
-        String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/question/audio" + System.currentTimeMillis() + ".mp4";
-        relativeLayout.setOnTouchListener((view1, motionEvent) -> {
+        File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/question/audio/" + System.currentTimeMillis() + ".mp4");
+        imageView.setOnTouchListener((view1, motionEvent) -> {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, RECORD_AUDIO);
             } else {
-                startAudioVoice(textView, motionEvent, path);
+                startAudioVoice(textView, motionEvent, file);
             }
             return true;
         });
@@ -652,7 +656,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     //开始长按录音
-    private void startAudioVoice(TextView textView, MotionEvent motionEvent, String path) {
+    private void startAudioVoice(TextView textView, MotionEvent motionEvent, File file) {
         switch (motionEvent.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 textView.setText("开始录音");
@@ -660,6 +664,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     mMediaRecorder = new MediaRecorder();
                 }
                 try {
+                    if (!file.getParentFile().exists()) {
+                        file.getParentFile().mkdirs();
+                    }
+                    file.createNewFile();
+
                     /* ②setAudioSource/setVedioSource */
                     mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);// 设置麦克风
                     /* ②设置音频文件的编码：AAC/AMR_NB/AMR_MB/Default 声音的（波形）的采样 */
@@ -670,7 +679,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                      */
                     mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
                     /* ③准备 */
-                    mMediaRecorder.setOutputFile(path);
+                    mMediaRecorder.setOutputFile(file.getAbsolutePath());
                     mMediaRecorder.setMaxDuration(MAX_LENGTH);
                     mMediaRecorder.prepare();
                     /* ④开始 */
@@ -681,15 +690,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case MotionEvent.ACTION_UP:
                 textView.setText("停止录音");
+
+                mMediaRecorder.setOnErrorListener(null);
+                mMediaRecorder.setOnInfoListener(null);
+                mMediaRecorder.setPreviewDisplay(null);
                 mMediaRecorder.stop();
+
                 mMediaRecorder.reset();
                 mMediaRecorder.release();
                 mMediaRecorder = null;
 
                 QuestionAnswerBean bean = new QuestionAnswerBean();
                 bean.setId(15);
+//                bean.setId(23);
                 bean.setType("回答4");
-                bean.setLabel(path);
+                bean.setLabel(file.getAbsolutePath());
                 mList.add(bean);
                 mMainAdapter.notifyItemInserted(mList.size());
                 mLinearLayout.removeAllViews();
@@ -843,56 +858,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     //上传定位
     private void uploadPosition() {
-        LocationManager lm = (LocationManager) this.getSystemService(LOCATION_SERVICE);
-        boolean ok = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
-        if (ok) {
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
-                    ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, GPS);
-            } else {
-                getLatitudeLongitude();
-            }
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, GPS);
         } else {
-            Toast.makeText(this, "系统检测到未开启GPS定位服务,请开启", Toast.LENGTH_SHORT).show();
-            Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-            startActivityForResult(intent, SETTING_GPS);
+            //获取地理位置管理器
+            LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            //获取所有可用的位置提供器
+            List<String> providers = locationManager.getProviders(true);
+            for (String provider : providers) {
+                Location location = locationManager.getLastKnownLocation(provider);
+                setLatitudeLongitudeToLocation(location);
+            }
         }
-    }
-
-    //获取经纬度
-    private void getLatitudeLongitude() {
-        //获取位置管理服务
-        LocationManager locationManager;
-        String serviceName = Context.LOCATION_SERVICE;
-        locationManager = (LocationManager) this.getSystemService(serviceName);
-        //查找到服务信息
-        Criteria criteria = new Criteria();
-        //高精度
-        criteria.setAccuracy(Criteria.ACCURACY_FINE);
-        criteria.setAltitudeRequired(false);
-        criteria.setBearingRequired(false);
-        criteria.setCostAllowed(true);
-        //低功耗
-        criteria.setPowerRequirement(Criteria.POWER_LOW);
-        //获取GPS信息
-        String provider = locationManager.getBestProvider(criteria, true);
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        Location location = locationManager.getLastKnownLocation(provider); // 通过GPS获取位置
-        setLatitudeLongitudeToLocation(location);
     }
 
     //经纬度转换成地点
     private void setLatitudeLongitudeToLocation(Location location) {
-        if (location != null) {
+        if (location != null && !mIsLocation) {
             double latitude = location.getLatitude();
             double longitude = location.getLongitude();
             String position = GetAddressUtil.getAddress(this, latitude, longitude);
@@ -905,17 +888,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mLinearLayout.removeAllViews();
             mLinearLayout.setVisibility(View.GONE);
             updateNestScrollView();
-        } else {
-            QuestionAnswerBean bean = new QuestionAnswerBean();
-            bean.setId(25);
-            bean.setType("回答1");
-            bean.setLabel("您没有同意上报位置");
-            mList.add(bean);
-            mMainAdapter.notifyItemInserted(mList.size());
-            mLinearLayout.removeAllViews();
-            mLinearLayout.setVisibility(View.GONE);
-            updateNestScrollView();
-            Log.e("MainActivity", "无法获取到位置信息");
+            mIsLocation = true;
         }
     }
 

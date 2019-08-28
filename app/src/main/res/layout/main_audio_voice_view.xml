@@ -10,7 +10,7 @@
         android:id="@+id/main_audio_voice_view_tv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="点击开始录音"
+        android:text="长按开始录制"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
