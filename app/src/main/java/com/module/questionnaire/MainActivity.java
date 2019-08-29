@@ -1,6 +1,7 @@
 package com.module.questionnaire;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
@@ -9,6 +10,8 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.Point;
+import android.graphics.Rect;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -18,6 +21,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.Message;
 import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.provider.Settings;
@@ -35,6 +39,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -42,6 +47,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -73,6 +79,7 @@ import com.module.questionnaire.utils.GetJsonDataUtil;
 import com.module.questionnaire.utils.GlideEngine;
 import com.module.questionnaire.utils.StringBitmapUtil;
 import com.module.questionnaire.widget.DrawableEditText;
+import com.module.questionnaire.widget.VoiceView;
 import com.zhihu.matisse.Matisse;
 import com.zhihu.matisse.MimeType;
 
@@ -104,6 +111,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ArrayList<ArrayList<String>> options2Items = new ArrayList<>();
     private ArrayList<ArrayList<ArrayList<String>>> options3Items = new ArrayList<>();
     private MediaRecorder mMediaRecorder;
+    //判断是否开始录音
+    private boolean mIsRecording = false;
+    //录音计时
+    private float mTimer;
     //如果有好几种定位提供方式，当前只取第一次定位到的地址，后面的不管
     private boolean mIsLocation = false;
     private long mExitTime;
@@ -118,6 +129,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final int SETTING_GPS = 1008;
     private static final int READ_CONTACTS = 1009;
 
+    private static final int MSG_AUDIO_HAS_PREPARED = 101;
+    private static final int MSG_VOLUME_UPDATED = 102;
+    private static final int MSG_DIALOG_DISMISS = 103;
     // 最大录音时长1000*60*10;
     private static final int MAX_LENGTH = 1000 * 60 * 10;
 
@@ -170,7 +184,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void initData() {
         QuestionAnswerBean bean = new QuestionAnswerBean();
         bean.setId(0);
-//        bean.setId(12);
         bean.setType("问题1");
         bean.setLabel("问卷调查功能演示");
         mList.add(bean);
@@ -639,8 +652,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void addAudioVoiceView() {
         mLinearLayout.setVisibility(View.VISIBLE);
         View view = LayoutInflater.from(this).inflate(R.layout.main_audio_voice_view, null);
+        VoiceView voiceView = view.findViewById(R.id.main_audio_voice_view_animation_vv);
         TextView textView = view.findViewById(R.id.main_audio_voice_view_tv);
-        RelativeLayout relativeLayout = view.findViewById(R.id.main_audio_voice_view_rl);
         ImageView imageView = view.findViewById(R.id.main_audio_voice_view_iv);
 
         File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/question/audio/" + System.currentTimeMillis() + ".mp4");
@@ -648,7 +661,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, RECORD_AUDIO);
             } else {
-                startAudioVoice(textView, motionEvent, file);
+                startAudioVoice(voiceView, textView, motionEvent, file, view1);
             }
             return true;
         });
@@ -656,7 +669,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     //开始长按录音
-    private void startAudioVoice(TextView textView, MotionEvent motionEvent, File file) {
+    private void startAudioVoice(VoiceView voiceView, TextView textView, MotionEvent motionEvent, File file, View view) {
         switch (motionEvent.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 textView.setText("开始录音");
@@ -684,37 +697,137 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     mMediaRecorder.prepare();
                     /* ④开始 */
                     mMediaRecorder.start();
+                    mHandler.sendEmptyMessage(MSG_AUDIO_HAS_PREPARED);
+                    voiceView.setVisibility(View.VISIBLE);
+                    voiceView.startAnimation();
                 } catch (IllegalStateException | IOException e) {
                     e.getMessage();
                 }
                 break;
             case MotionEvent.ACTION_UP:
-                textView.setText("停止录音");
+                textView.setText("长按开始录制");
 
-                mMediaRecorder.setOnErrorListener(null);
-                mMediaRecorder.setOnInfoListener(null);
-                mMediaRecorder.setPreviewDisplay(null);
-                mMediaRecorder.stop();
+                if (!mIsRecording || mTimer < 1f) {
+                    //当录制时长过短时，会走这里
+                    Toast.makeText(this, "录音时间太短", Toast.LENGTH_SHORT).show();
+                    file.delete();
 
-                mMediaRecorder.reset();
-                mMediaRecorder.release();
-                mMediaRecorder = null;
+                    try {
+                        mMediaRecorder.stop();
+                        mMediaRecorder.release();
+                        mMediaRecorder = null;
+                    } catch (RuntimeException e) {
+                        e.printStackTrace();
+                        mMediaRecorder = null;
+                    }
+                    voiceView.setVisibility(View.INVISIBLE);
+                    voiceView.stopAnimation();
+                } else {
+                    //正常录制结束
+                    mMediaRecorder.stop();
+                    mMediaRecorder.release();
+                    mMediaRecorder = null;
 
-                QuestionAnswerBean bean = new QuestionAnswerBean();
-                bean.setId(15);
-//                bean.setId(23);
-                bean.setType("回答4");
-                bean.setLabel(file.getAbsolutePath());
-                mList.add(bean);
-                mMainAdapter.notifyItemInserted(mList.size());
-                mLinearLayout.removeAllViews();
-                mLinearLayout.setVisibility(View.GONE);
-                updateNestScrollView();
+                    voiceView.setVisibility(View.INVISIBLE);
+                    voiceView.stopAnimation();
+
+                    showVoiceHandleDialog(file);
+                }
+
+                mIsRecording = false;
+                mTimer = 0;
                 break;
             default:
                 break;
         }
     }
+
+    private void showVoiceHandleDialog(File file) {
+        Dialog dialog = new Dialog(this, R.style.ThemeLight);
+        View contentView = LayoutInflater.from(this).inflate(R.layout.dialog_voice_handle, null);
+        dialog.setContentView(contentView);
+        dialog.setCancelable(false);
+
+        try {
+            //将dialog本身的黑色背景变成透明色
+            ViewGroup parent = (ViewGroup) contentView.getParent();
+            parent.setBackgroundResource(android.R.color.transparent);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        Window window = dialog.getWindow();
+        WindowManager.LayoutParams layoutParams = window.getAttributes();
+        layoutParams.gravity = Gravity.BOTTOM;
+        layoutParams.width = WindowManager.LayoutParams.MATCH_PARENT;
+        layoutParams.height = mLinearLayout.getMeasuredHeight();
+        window.setAttributes(layoutParams);
+        dialog.show();
+
+        FrameLayout frameCancel = contentView.findViewById(R.id.dialog_voice_handle_cancel_fl);
+        FrameLayout frameSend = contentView.findViewById(R.id.dialog_voice_handle_send_fl);
+
+        frameCancel.setOnClickListener(view -> {
+            file.delete();
+            dialog.dismiss();
+        });
+
+        frameSend.setOnClickListener(view -> {
+            dialog.dismiss();
+            QuestionAnswerBean bean = new QuestionAnswerBean();
+            bean.setId(15);
+            bean.setType("回答4");
+            bean.setLabel(file.getAbsolutePath());
+            mList.add(bean);
+            mMainAdapter.notifyItemInserted(mList.size());
+            mLinearLayout.removeAllViews();
+            mLinearLayout.setVisibility(View.GONE);
+            updateNestScrollView();
+        });
+    }
+
+    //判断当前触摸范围是否在长按说话图片内
+    private boolean isInScope(View view, MotionEvent motionEvent) {
+        int x = (int) motionEvent.getRawX();
+        int y = (int) motionEvent.getRawY();
+
+        int[] location = new int[2];
+        view.getLocationOnScreen(location);
+        int left = location[0];
+        int top = location[1];
+        int right = left + view.getMeasuredWidth();
+        int bottom = top + view.getMeasuredHeight();
+        return y >= top && y <= bottom && x >= left && x <= right;
+    }
+
+    @SuppressLint("HandlerLeak")
+    private Handler mHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case MSG_AUDIO_HAS_PREPARED:
+                    mIsRecording = true;
+                    new Thread(() -> {
+                        while (mIsRecording) {
+                            try {
+                                Thread.sleep(100);
+                                mTimer += 0.1f;
+                                mHandler.sendEmptyMessage(MSG_VOLUME_UPDATED);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }).start();
+                    break;
+                case MSG_VOLUME_UPDATED:
+                    break;
+                case MSG_DIALOG_DISMISS:
+                    break;
+                default:
+                    break;
+            }
+        }
+    };
 
     //动态添加时间选择器TimeSelectView
     private void addTimeSelectView() {
@@ -866,9 +979,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
             //获取所有可用的位置提供器
             List<String> providers = locationManager.getProviders(true);
+            int counter = 0;
             for (String provider : providers) {
+                counter++;
                 Location location = locationManager.getLastKnownLocation(provider);
                 setLatitudeLongitudeToLocation(location);
+                if (counter == providers.size() && location == null) {
+                    QuestionAnswerBean bean = new QuestionAnswerBean();
+                    bean.setId(25);
+                    bean.setType("回答1");
+                    bean.setLabel("获取不到您的定位，请检查网络或者GPS是否开启");
+                    mList.add(bean);
+                    mMainAdapter.notifyItemInserted(mList.size());
+                    mLinearLayout.removeAllViews();
+                    mLinearLayout.setVisibility(View.GONE);
+                    updateNestScrollView();
+                }
             }
         }
     }

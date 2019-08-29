@@ -3,26 +3,35 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingTop="20dp"
+    android:background="@color/white"
     android:paddingBottom="20dp">
 
-    <TextView
-        android:id="@+id/main_audio_voice_view_tv"
-        android:layout_width="wrap_content"
+    <RelativeLayout
+        android:id="@+id/main_audio_voice_view_animation_rl"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="长按开始录制"
+        android:background="@color/white"
+        app:layout_constraintBottom_toTopOf="@id/main_audio_voice_view_rl"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.module.questionnaire.widget.VoiceView
+            android:id="@+id/main_audio_voice_view_animation_vv"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:background="@color/bg"
+            android:visibility="invisible" />
+
+    </RelativeLayout>
 
     <RelativeLayout
         android:id="@+id/main_audio_voice_view_rl"
         android:layout_width="match_parent"
         android:layout_height="150dp"
-        android:layout_marginTop="20dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/main_audio_voice_view_tv">
+        app:layout_constraintTop_toBottomOf="@id/main_audio_voice_view_animation_rl">
 
         <ImageView
             android:id="@+id/main_audio_voice_view_iv"
