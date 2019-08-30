@@ -42,7 +42,9 @@ public class MainAdapter extends RecyclerView.Adapter {
     private ItemUpdateListener mItemUpdateListener;
 
     public interface ItemUpdateListener {
-        void onInteraction(int id);
+        void onQuestionInteraction(String id);
+
+        void onAnswerInteraction();
     }
 
     public void setItemUpdateListener(ItemUpdateListener itemUpdateListener) {
@@ -70,9 +72,6 @@ public class MainAdapter extends RecyclerView.Adapter {
             case 4:
                 mViewHolder = new AnswerHolder3(inflater.inflate(R.layout.item_main_answer3, parent, false));
                 break;
-            case 5:
-                mViewHolder = new AnswerHolder4(inflater.inflate(R.layout.item_main_answer4, parent, false));
-                break;
             default:
                 break;
         }
@@ -97,9 +96,6 @@ public class MainAdapter extends RecyclerView.Adapter {
             case 4:
                 bindAnswerHolder3(viewHolder, position);
                 break;
-            case 5:
-                bindAnswerHolder4(viewHolder, position);
-                break;
             default:
                 break;
         }
@@ -112,7 +108,7 @@ public class MainAdapter extends RecyclerView.Adapter {
         Handler handler = new Handler(Looper.getMainLooper());
         handler.postDelayed(() -> {
             if (mItemUpdateListener != null) {
-                mItemUpdateListener.onInteraction(mList.get(position).getId());
+                mItemUpdateListener.onQuestionInteraction(String.valueOf(mList.get(position).getId()));
             }
 
             holder.mLoadingView.stopAnim();
@@ -137,7 +133,7 @@ public class MainAdapter extends RecyclerView.Adapter {
         Handler handler = new Handler(Looper.getMainLooper());
         handler.postDelayed(() -> {
             if (mItemUpdateListener != null) {
-                mItemUpdateListener.onInteraction(mList.get(position).getId());
+                mItemUpdateListener.onQuestionInteraction(String.valueOf(mList.get(position).getId()));
             }
 
             if (position == 0) {
@@ -207,17 +203,12 @@ public class MainAdapter extends RecyclerView.Adapter {
         holder.textView.setText(mList.get(position).getLabel());
         if (mItemUpdateListener != null) {
             Handler handler = new Handler(Looper.getMainLooper());
-            handler.postDelayed(() -> mItemUpdateListener.onInteraction(mList.get(position).getId()), 500);
+            handler.postDelayed(() -> mItemUpdateListener.onAnswerInteraction(), 500);
         }
     }
 
     private void bindAnswerHolder2(RecyclerView.ViewHolder viewHolder, int position) {
         AnswerHolder2 holder = (AnswerHolder2) viewHolder;
-        holder.textView.setText(mList.get(position).getLabel());
-    }
-
-    private void bindAnswerHolder3(RecyclerView.ViewHolder viewHolder, int position) {
-        AnswerHolder3 holder = (AnswerHolder3) viewHolder;
         Glide.with(mContext).load(R.mipmap.ic_launcher).apply(new RequestOptions().circleCrop()).into(holder.imageView);
         Glide.with(mContext).load(StringBitmapUtil.StringToBitMap(mList.get(position).getLabel())).apply(new RequestOptions().error(R.mipmap.ic_launcher)).into(holder.imagePhoto);
         if (mList.get(position).getId() == 19) {
@@ -225,12 +216,12 @@ public class MainAdapter extends RecyclerView.Adapter {
         }
         if (mItemUpdateListener != null) {
             Handler handler = new Handler(Looper.getMainLooper());
-            handler.postDelayed(() -> mItemUpdateListener.onInteraction(mList.get(position).getId()), 500);
+            handler.postDelayed(() -> mItemUpdateListener.onAnswerInteraction(), 500);
         }
     }
 
-    private void bindAnswerHolder4(RecyclerView.ViewHolder viewHolder, int position) {
-        AnswerHolder4 holder = (AnswerHolder4) viewHolder;
+    private void bindAnswerHolder3(RecyclerView.ViewHolder viewHolder, int position) {
+        AnswerHolder3 holder = (AnswerHolder3) viewHolder;
         Glide.with(mContext).load(R.mipmap.ic_launcher).apply(new RequestOptions().circleCrop()).into(holder.imageAvatar);
 
         final boolean[] isInit = {false};
@@ -281,7 +272,7 @@ public class MainAdapter extends RecyclerView.Adapter {
 
         if (mItemUpdateListener != null) {
             Handler handler = new Handler(Looper.getMainLooper());
-            handler.postDelayed(() -> mItemUpdateListener.onInteraction(mList.get(position).getId()), 500);
+            handler.postDelayed(() -> mItemUpdateListener.onAnswerInteraction(), 500);
         }
     }
 
@@ -294,23 +285,20 @@ public class MainAdapter extends RecyclerView.Adapter {
     public int getItemViewType(int position) {
         int type;
         switch (mList.get(position).getType()) {
-            case "问题1":
+            case "文本问题":
                 type = 0;
                 break;
-            case "问题2":
+            case "语音问题":
                 type = 1;
                 break;
-            case "回答1":
+            case "文本回答":
                 type = 2;
                 break;
-            case "回答2":
+            case "图片回答":
                 type = 3;
                 break;
-            case "回答3":
+            case "语音回答":
                 type = 4;
-                break;
-            case "回答4":
-                type = 5;
                 break;
             default:
                 type = 0;
@@ -363,33 +351,23 @@ public class MainAdapter extends RecyclerView.Adapter {
 
     private class AnswerHolder2 extends RecyclerView.ViewHolder {
 
-        private TextView textView;
-
-        public AnswerHolder2(View itemView) {
-            super(itemView);
-            textView = itemView.findViewById(R.id.item_main_answer2_content_tv);
-        }
-    }
-
-    private class AnswerHolder3 extends RecyclerView.ViewHolder {
-
         private ImageView imageView;
         private ImageView imagePhoto;
 
-        public AnswerHolder3(View itemView) {
+        public AnswerHolder2(View itemView) {
             super(itemView);
             imageView = itemView.findViewById(R.id.item_main_answer3_avatar_iv);
             imagePhoto = itemView.findViewById(R.id.item_main_answer3_photo_iv);
         }
     }
 
-    private class AnswerHolder4 extends RecyclerView.ViewHolder {
+    private class AnswerHolder3 extends RecyclerView.ViewHolder {
 
         private ImageView imageAvatar;
         private ImageView imageAudioPlayer;
         private TextView textView;
 
-        public AnswerHolder4(View itemView) {
+        public AnswerHolder3(View itemView) {
             super(itemView);
             imageAvatar = itemView.findViewById(R.id.item_main_answer4_avatar_iv);
             imageAudioPlayer = itemView.findViewById(R.id.item_main_answer4_audio_player_iv);

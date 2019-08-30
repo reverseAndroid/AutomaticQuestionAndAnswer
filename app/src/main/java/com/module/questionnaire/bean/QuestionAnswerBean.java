@@ -44,7 +44,6 @@ public class QuestionAnswerBean {
     public static class Item {
 
         private int id;
-        private String title;
         private String value;
 
         public int getId() {
@@ -53,14 +52,6 @@ public class QuestionAnswerBean {
 
         public void setId(int id) {
             this.id = id;
-        }
-
-        public String getTitle() {
-            return title;
-        }
-
-        public void setTitle(String title) {
-            this.title = title;
         }
 
         public String getValue() {

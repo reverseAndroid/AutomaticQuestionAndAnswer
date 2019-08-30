@@ -44,7 +44,7 @@ public class AddRecyclerViewAdapter extends RecyclerView.Adapter {
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, int position) {
         AddRecyclerViewHolder holder = (AddRecyclerViewHolder) viewHolder;
-        holder.textView.setText(mList.get(position).getTitle());
+        holder.textView.setText(mList.get(position).getValue());
         holder.itemView.setOnClickListener(v -> {
             if (mOnItemClickListener != null) {
                 mOnItemClickListener.onItemClick(mList.get(position).getValue());

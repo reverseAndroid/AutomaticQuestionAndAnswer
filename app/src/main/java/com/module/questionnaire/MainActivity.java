@@ -10,11 +10,7 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.graphics.Point;
-import android.graphics.Rect;
-import android.location.Criteria;
 import android.location.Location;
-import android.location.LocationListener;
 import android.location.LocationManager;
 import android.media.MediaRecorder;
 import android.net.Uri;
@@ -24,7 +20,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.provider.ContactsContract;
 import android.provider.MediaStore;
-import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -39,7 +34,6 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -54,7 +48,6 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RatingBar;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -74,10 +67,17 @@ import com.module.questionnaire.bean.ContactBean;
 import com.module.questionnaire.bean.JsonBean;
 import com.module.questionnaire.bean.MultipleSelectionBean;
 import com.module.questionnaire.bean.QuestionAnswerBean;
+import com.module.questionnaire.bean.response.AnswerResponse;
+import com.module.questionnaire.bean.response.QuestionResponse;
 import com.module.questionnaire.utils.GetAddressUtil;
 import com.module.questionnaire.utils.GetJsonDataUtil;
 import com.module.questionnaire.utils.GlideEngine;
+import com.module.questionnaire.utils.LogUtils;
+import com.module.questionnaire.utils.SPUtils;
 import com.module.questionnaire.utils.StringBitmapUtil;
+import com.module.questionnaire.utils.http.ApiRetrofit;
+import com.module.questionnaire.utils.http.Constant;
+import com.module.questionnaire.utils.http.NewApiRetrofit;
 import com.module.questionnaire.widget.DrawableEditText;
 import com.module.questionnaire.widget.VoiceView;
 import com.zhihu.matisse.Matisse;
@@ -89,7 +89,12 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, MainAdapter.ItemUpdateListener {
 
@@ -105,7 +110,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private LinearLayout mLinearLayout;
     private MainAdapter mMainAdapter;
 
+    //问题List
+    private QuestionResponse mQuestionResponse;
+    //答案List
+    private AnswerResponse mAnswerResponse;
+    //整合
     private List<QuestionAnswerBean> mList = new ArrayList<>();
+    //当前是第几个item了
+    private int mIndex;
     private Uri mUri;
     private List<JsonBean> options1Items = new ArrayList<>();
     private ArrayList<ArrayList<String>> options2Items = new ArrayList<>();
@@ -146,9 +158,38 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             decor.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
         }
 
+        //暂时放在这里
+        initAppConfig();
         initTitle();
         initView();
-        initData();
+    }
+
+    private void initAppConfig() {
+        String url = "http://console.anxinabc.com/api_v2/config/appConfig";
+        ApiRetrofit.getInstance().getAppConfig(url)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(appConfigResponse -> {
+                    if (appConfigResponse.isSuccess()) {
+                        Constant.URL = appConfigResponse.getData().getUrl();
+                        initToken();
+                    }
+                }, throwable -> LogUtils.e(throwable.getMessage()));
+    }
+
+    private void initToken() {
+        Map<String, String> params = new HashMap<>();
+        params.put("mobile", "18993195341");
+        params.put("password", "123456");
+        NewApiRetrofit.getInstance().login(params)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(loginResponse -> {
+                    if (loginResponse.isSuccess()) {
+                        SPUtils.getInstance().put(Constant.TOKEN, loginResponse.getData().getAccess_token());
+                        initData();
+                    }
+                }, throwable -> LogUtils.e(throwable.getMessage()));
     }
 
     private void initTitle() {
@@ -182,16 +223,39 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initData() {
-        QuestionAnswerBean bean = new QuestionAnswerBean();
-        bean.setId(0);
-        bean.setType("问题1");
-        bean.setLabel("问卷调查功能演示");
-        mList.add(bean);
+        Map<String, String> params = new HashMap<>();
+        params.put("groupid", "1");
+        NewApiRetrofit.getInstance().getQuestionList(params)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(questionResponse -> {
+                    if (questionResponse.isSuccess()) {
+                        mQuestionResponse = questionResponse;
 
-        mMainAdapter = new MainAdapter(this, mList);
-        mRecyclerView.setAdapter(mMainAdapter);
-        mMainAdapter.setItemUpdateListener(this);
-        mRecyclerView.setVisibility(View.VISIBLE);
+                        startAnswerListTask();
+                    }
+                }, throwable -> LogUtils.e(throwable.getMessage()));
+    }
+
+    private void startAnswerListTask() {
+        NewApiRetrofit.getInstance().getAnswerList()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(answerResponse -> {
+                    if (answerResponse.isSuccess()) {
+                        mAnswerResponse = answerResponse;
+                        QuestionAnswerBean bean = new QuestionAnswerBean();
+                        bean.setId(mQuestionResponse.getData().get(mIndex).getId());
+                        bean.setType(getQuestionType(mQuestionResponse.getData().get(mIndex).getType()));
+                        bean.setLabel(mQuestionResponse.getData().get(mIndex).getLabel());
+                        mList.add(bean);
+                        mMainAdapter = new MainAdapter(this, mList);
+                        mRecyclerView.setAdapter(mMainAdapter);
+                        mMainAdapter.setItemUpdateListener(this);
+                        mRecyclerView.setVisibility(View.VISIBLE);
+                        mIndex++;
+                    }
+                }, throwable -> LogUtils.e(throwable.getMessage()));
     }
 
     @Override
@@ -203,171 +267,57 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     /**
-     * adapter监听
-     * onInteraction是作为问答方数据加载完毕后，通知回答方做出反应的接口
+     * onQuestionInteraction是作为问答方数据加载完毕后，通知回答方做出反应的接口
      */
     @Override
-    public void onInteraction(int id) {
-        QuestionAnswerBean bean;
-        switch (id) {
+    public void onQuestionInteraction(String id) {
+        switch (mQuestionResponse.getData().get(Integer.valueOf(id)).getType()) {
             case 0:
-                bean = new QuestionAnswerBean();
-                bean.setId(1);
-                bean.setType("问题1");
-                bean.setLabel("单选问题1");
-                mList.add(bean);
-                mMainAdapter.notifyItemInserted(mList.size());
+                if (mAnswerResponse.getData().get(id).size() > 1) {
+                    addFormView(id);
+                } else {
+                    addEditTextView();
+                }
                 break;
             case 1:
-                addRecyclerView();
+                if (mAnswerResponse.getData().get(id).size() > 2) {
+                    addRecyclerView(id);
+                } else {
+                    addRadioView(id);
+                }
                 break;
             case 2:
-                bean = new QuestionAnswerBean();
-                bean.setId(3);
-                bean.setType("问题1");
-                bean.setLabel("单选问题2");
-                mList.add(bean);
-                mMainAdapter.notifyItemInserted(mList.size());
+                addMultipleSelectionView();
                 break;
             case 3:
-                addRadioView();
-                break;
-            case 4:
-                bean = new QuestionAnswerBean();
-                bean.setId(5);
-                bean.setType("问题1");
-                bean.setLabel("输入问题");
-                mList.add(bean);
-                mMainAdapter.notifyItemInserted(mList.size());
-                break;
-            case 5:
-                addEditTextView();
-                break;
-            case 6:
-                bean = new QuestionAnswerBean();
-                bean.setId(7);
-                bean.setType("问题1");
-                bean.setLabel("上传图片");
-                mList.add(bean);
-                mMainAdapter.notifyItemInserted(mList.size());
-                break;
-            case 7:
                 addUploadPhotoView();
                 break;
+            case 4:
+                addUploadFileView();
+                break;
+            case 5:
+                addAudioVoiceView();
+                break;
+            case 6:
+                addCustomizeSignatureView();
+                break;
+            case 7:
+                uploadContact();
+                break;
             case 8:
-                bean = new QuestionAnswerBean();
-                bean.setId(9);
-                bean.setType("问题1");
-                bean.setLabel("省市区");
-                mList.add(bean);
-                mMainAdapter.notifyItemInserted(mList.size());
+                uploadPosition();
                 break;
             case 9:
                 addRegionalChoiceView();
                 break;
             case 10:
-                bean = new QuestionAnswerBean();
-                bean.setId(11);
-                bean.setType("问题1");
-                bean.setLabel("自定义签名");
-                mList.add(bean);
-                mMainAdapter.notifyItemInserted(mList.size());
-                break;
-            case 11:
-                addCustomizeSignatureView();
-                break;
-            case 12:
-                bean = new QuestionAnswerBean();
-                bean.setId(13);
-                bean.setType("问题1");
-                bean.setLabel("请根据语音回答问题");
-                mList.add(bean);
-                mMainAdapter.notifyItemInserted(mList.size());
-                break;
-            case 13:
-                bean = new QuestionAnswerBean();
-                bean.setId(14);
-                bean.setType("问题2");
-                bean.setLabel("test.mp3");
-                mList.add(bean);
-                mMainAdapter.notifyItemInserted(mList.size());
-                break;
-            case 14:
-                addAudioVoiceView();
-                break;
-            case 15:
-                bean = new QuestionAnswerBean();
-                bean.setId(16);
-                bean.setType("问题1");
-                bean.setLabel("时间选择器");
-                mList.add(bean);
-                mMainAdapter.notifyItemInserted(mList.size());
-                break;
-            case 16:
                 addTimeSelectView();
                 break;
-            case 17:
-                bean = new QuestionAnswerBean();
-                bean.setId(18);
-                bean.setType("问题1");
-                bean.setLabel("上传文件");
-                mList.add(bean);
-                mMainAdapter.notifyItemInserted(mList.size());
+            case 11:
+                Toast.makeText(this, "暂无", Toast.LENGTH_SHORT).show();
                 break;
-            case 18:
-                addUploadFileView();
-                break;
-            case 19:
-                bean = new QuestionAnswerBean();
-                bean.setId(20);
-                bean.setType("问题1");
-                bean.setLabel("表单问题");
-                mList.add(bean);
-                mMainAdapter.notifyItemInserted(mList.size());
-                break;
-            case 20:
-                addFormView();
-                break;
-            case 21:
-                bean = new QuestionAnswerBean();
-                bean.setId(22);
-                bean.setType("问题1");
-                bean.setLabel("多选问题");
-                mList.add(bean);
-                mMainAdapter.notifyItemInserted(mList.size());
-                break;
-            case 22:
-                addMultipleSelectionView();
-                break;
-            case 23:
-                bean = new QuestionAnswerBean();
-                bean.setId(24);
-                bean.setType("问题1");
-                bean.setLabel("上传定位");
-                mList.add(bean);
-                mMainAdapter.notifyItemInserted(mList.size());
-                break;
-            case 24:
-                uploadPosition();
-                break;
-            case 25:
-                bean = new QuestionAnswerBean();
-                bean.setId(26);
-                bean.setType("问题1");
-                bean.setLabel("上传通讯录");
-                mList.add(bean);
-                mMainAdapter.notifyItemInserted(mList.size());
-                break;
-            case 26:
-                uploadContact();
-                break;
-            case 27:
-                bean = new QuestionAnswerBean();
-                bean.setId(28);
-                bean.setType("问题1");
-                bean.setLabel("暂无问题");
-                mList.add(bean);
-                mMainAdapter.notifyItemInserted(mList.size());
+            case 12:
+                addAudioVoiceView();
                 break;
             default:
                 break;
@@ -375,8 +325,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         updateNestScrollView();
     }
 
+    /**
+     * onAnswerInteraction是作为回答方数据加载完毕后，通知问答方做出反应的接口
+     */
+    @Override
+    public void onAnswerInteraction() {
+        QuestionAnswerBean bean = new QuestionAnswerBean();
+        bean.setId(mQuestionResponse.getData().get(mIndex).getId());
+        bean.setType(getQuestionType(mQuestionResponse.getData().get(mIndex).getType()));
+        bean.setLabel(mQuestionResponse.getData().get(mIndex).getLabel());
+        mList.add(bean);
+        mMainAdapter.notifyItemInserted(mList.size());
+        updateNestScrollView();
+    }
+
     //动态添加单选的RecyclerView
-    private void addRecyclerView() {
+    private void addRecyclerView(String id) {
         mLinearLayout.setVisibility(View.VISIBLE);
         View view = LayoutInflater.from(this).inflate(R.layout.main_recycler_view, null);
         RecyclerView recyclerView = view.findViewById(R.id.main_recycler_view_rv);
@@ -385,60 +349,67 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         layoutManagerInfo.setOrientation(OrientationHelper.VERTICAL);
 
         List<QuestionAnswerBean.Item> itemList = new ArrayList<>();
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < mAnswerResponse.getData().get(id).size(); i++) {
             QuestionAnswerBean.Item item = new QuestionAnswerBean.Item();
-            item.setId(1);
-            item.setTitle("单选问题答案" + (i + 1));
-            item.setValue(String.valueOf(i + 1));
+            item.setId(mAnswerResponse.getData().get(id).get(i).getId());
+            item.setValue(mAnswerResponse.getData().get(id).get(i).getLabel());
             itemList.add(item);
         }
 
         AddRecyclerViewAdapter adapter = new AddRecyclerViewAdapter(this, itemList);
         recyclerView.setAdapter(adapter);
-        adapter.setOnItemListener(value -> {
-            QuestionAnswerBean bean = new QuestionAnswerBean();
-            bean.setId(2);
-            bean.setType("回答1");
-            bean.setLabel(value);
-            mList.add(bean);
-            mMainAdapter.notifyItemInserted(mList.size());
-            mLinearLayout.removeAllViews();
-            mLinearLayout.setVisibility(View.GONE);
-            updateNestScrollView();
+        adapter.setOnItemListener(new AddRecyclerViewAdapter.ItemClickListener() {
+            @Override
+            public void onItemClick(String value) {
+                QuestionAnswerBean bean = new QuestionAnswerBean();
+                bean.setType(getAnswerType(mAnswerResponse.getData().get(id).get(mIndex).getQuestion_id()));
+                bean.setLabel(value);
+                mList.add(bean);
+                mMainAdapter.notifyItemInserted(mList.size());
+                mLinearLayout.removeAllViews();
+                mLinearLayout.setVisibility(View.GONE);
+                updateNestScrollView();
+            }
         });
 
         mLinearLayout.addView(view);
     }
 
     //动态添加单选的RadioView
-    private void addRadioView() {
+    private void addRadioView(String id) {
         mLinearLayout.setVisibility(View.VISIBLE);
         View view = LayoutInflater.from(this).inflate(R.layout.main_radio_view, null);
         TextView textLeft = view.findViewById(R.id.main_radio_view_left_tv);
         textLeft.setText("我是11111");
-        textLeft.setOnClickListener(view1 -> {
-            QuestionAnswerBean bean = new QuestionAnswerBean();
-            bean.setId(4);
-            bean.setType("回答1");
-            bean.setLabel(textLeft.getText().toString());
-            mList.add(bean);
-            mMainAdapter.notifyItemInserted(mList.size());
-            mLinearLayout.removeAllViews();
-            mLinearLayout.setVisibility(View.GONE);
-            updateNestScrollView();
+        textLeft.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                QuestionAnswerBean bean = new QuestionAnswerBean();
+                bean.setId(mAnswerResponse.getData().get(id).get(mIndex).getId());
+                bean.setType(getAnswerType(mAnswerResponse.getData().get(id).get(mIndex).getQuestion_id()));
+                bean.setLabel(mAnswerResponse.getData().get(id).get(mIndex).getLabel());
+                mList.add(bean);
+                mMainAdapter.notifyItemInserted(mList.size());
+                mLinearLayout.removeAllViews();
+                mLinearLayout.setVisibility(View.GONE);
+                updateNestScrollView();
+            }
         });
         TextView textRight = view.findViewById(R.id.main_radio_view_right_tv);
         textRight.setText("我是33333");
-        textRight.setOnClickListener(view1 -> {
-            QuestionAnswerBean bean = new QuestionAnswerBean();
-            bean.setId(4);
-            bean.setType("回答1");
-            bean.setLabel(textRight.getText().toString());
-            mList.add(bean);
-            mMainAdapter.notifyItemInserted(mList.size());
-            mLinearLayout.removeAllViews();
-            mLinearLayout.setVisibility(View.GONE);
-            updateNestScrollView();
+        textRight.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                QuestionAnswerBean bean = new QuestionAnswerBean();
+                bean.setId(mAnswerResponse.getData().get(id).get(mIndex).getId());
+                bean.setType(getAnswerType(mAnswerResponse.getData().get(id).get(mIndex).getQuestion_id()));
+                bean.setLabel(mAnswerResponse.getData().get(id).get(mIndex).getLabel());
+                mList.add(bean);
+                mMainAdapter.notifyItemInserted(mList.size());
+                mLinearLayout.removeAllViews();
+                mLinearLayout.setVisibility(View.GONE);
+                updateNestScrollView();
+            }
         });
         mLinearLayout.addView(view);
     }
@@ -452,19 +423,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         //这里的“请输入姓名”是一个变量,跟随接口获取而改变
         editText.setHint("请输入姓名");
-        imageView.setOnClickListener(view1 -> {
-            if (!TextUtils.isEmpty(editText.getText())) {
-                QuestionAnswerBean bean = new QuestionAnswerBean();
-                bean.setId(6);
-                bean.setType("回答1");
-                bean.setLabel(editText.getText().toString());
-                mList.add(bean);
-                mMainAdapter.notifyItemInserted(mList.size());
-                mLinearLayout.removeAllViews();
-                mLinearLayout.setVisibility(View.GONE);
-                updateNestScrollView();
-            } else {
-                Toast.makeText(this, "不能为空", Toast.LENGTH_SHORT).show();
+        imageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (!TextUtils.isEmpty(editText.getText())) {
+                    QuestionAnswerBean bean = new QuestionAnswerBean();
+                    bean.setId(6);
+                    bean.setType("回答1");
+                    bean.setLabel(editText.getText().toString());
+                    mList.add(bean);
+                    mMainAdapter.notifyItemInserted(mList.size());
+                    mLinearLayout.removeAllViews();
+                    mLinearLayout.setVisibility(View.GONE);
+                    updateNestScrollView();
+                } else {
+                    Toast.makeText(MainActivity.this, "不能为空", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
@@ -653,7 +627,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mLinearLayout.setVisibility(View.VISIBLE);
         View view = LayoutInflater.from(this).inflate(R.layout.main_audio_voice_view, null);
         VoiceView voiceView = view.findViewById(R.id.main_audio_voice_view_animation_vv);
-        TextView textView = view.findViewById(R.id.main_audio_voice_view_tv);
         ImageView imageView = view.findViewById(R.id.main_audio_voice_view_iv);
 
         File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/question/audio/" + System.currentTimeMillis() + ".mp4");
@@ -661,7 +634,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, RECORD_AUDIO);
             } else {
-                startAudioVoice(voiceView, textView, motionEvent, file, view1);
+                startAudioVoice(voiceView, motionEvent, file, view1);
             }
             return true;
         });
@@ -669,10 +642,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     //开始长按录音
-    private void startAudioVoice(VoiceView voiceView, TextView textView, MotionEvent motionEvent, File file, View view) {
+    private void startAudioVoice(VoiceView voiceView, MotionEvent motionEvent, File file, View view) {
         switch (motionEvent.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                textView.setText("开始录音");
                 if (mMediaRecorder == null) {
                     mMediaRecorder = new MediaRecorder();
                 }
@@ -705,8 +677,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 break;
             case MotionEvent.ACTION_UP:
-                textView.setText("长按开始录制");
-
                 if (!mIsRecording || mTimer < 1f) {
                     //当录制时长过短时，会走这里
                     Toast.makeText(this, "录音时间太短", Toast.LENGTH_SHORT).show();
@@ -888,7 +858,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     //动态添加表单的FormView
-    private void addFormView() {
+    private void addFormView(String id) {
         mLinearLayout.setVisibility(View.VISIBLE);
         View view = LayoutInflater.from(this).inflate(R.layout.main_form_view, null);
         DrawableEditText editName = view.findViewById(R.id.main_form_view_name_et);
@@ -1175,8 +1145,69 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    //返回问题类型
+    private String getQuestionType(int type) {
+        String typeText;
+        switch (type) {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 6:
+            case 7:
+            case 8:
+            case 9:
+            case 10:
+            case 11:
+                typeText = "文本问题";
+                break;
+            case 5:
+            case 12:
+                typeText = "语音问题";
+                break;
+            default:
+                typeText = "文本回答";
+                break;
+
+        }
+        return typeText;
+    }
+
+    //返回回答类型
+    private String getAnswerType(int type) {
+        String typeText;
+        switch (type) {
+            case 0:
+            case 1:
+            case 2:
+            case 7:
+            case 8:
+            case 9:
+            case 10:
+            case 11:
+                typeText = "文本回答";
+                break;
+            case 3:
+            case 4:
+            case 6:
+                typeText = "图片回答";
+                break;
+            case 5:
+            case 12:
+                typeText = "语音回答";
+                break;
+            default:
+                typeText = "文本回答";
+                break;
+
+        }
+        return typeText;
+    }
+
     //addView完之后，不等于马上就会显示，而是在队列中等待处理，虽然很快，但是如果立即调用fullScroll，view可能还没有显示出来，所以会失败，应该通过handler在新线程中更新。
     private void updateNestScrollView() {
+        mIndex++;
         Handler handler = new Handler();
         handler.post(() -> {
             mNestedScrollView.fullScroll(NestedScrollView.FOCUS_DOWN);
