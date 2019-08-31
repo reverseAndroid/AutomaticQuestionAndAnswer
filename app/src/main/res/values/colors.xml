@@ -9,4 +9,7 @@
     <color name="bg">#F1F3F6</color>
     <color name="btn">#4D51E9</color>
     <color name="click_background">#8B8989</color>
+    <color name="regional_choice_bg">#D8D6D3</color>
+    <color name="regional_choice_text">#FFA39F9A</color>
+
 </resources>

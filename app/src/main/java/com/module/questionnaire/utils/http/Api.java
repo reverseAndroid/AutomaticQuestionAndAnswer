@@ -4,6 +4,7 @@ import com.module.questionnaire.bean.response.AnswerResponse;
 import com.module.questionnaire.bean.response.AppConfigResponse;
 import com.module.questionnaire.bean.response.LoginResponse;
 import com.module.questionnaire.bean.response.QuestionResponse;
+import com.module.questionnaire.bean.response.RegionalChoiceResponse;
 
 import okhttp3.RequestBody;
 import retrofit2.http.Body;
@@ -32,4 +33,8 @@ public interface Api {
     //获取答案列表
     @POST("api_v4/lead/lead_answer")
     Observable<AnswerResponse> getAnswerList();
+
+    //获取地区
+    @POST("api_v4/lead/getAddr")
+    Observable<RegionalChoiceResponse> getRegionalChoice(@Body RequestBody requestBody);
 }

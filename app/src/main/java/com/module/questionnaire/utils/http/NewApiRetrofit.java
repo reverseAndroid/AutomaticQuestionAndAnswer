@@ -6,6 +6,7 @@ import com.module.questionnaire.bean.response.AnswerResponse;
 import com.module.questionnaire.bean.response.AppConfigResponse;
 import com.module.questionnaire.bean.response.LoginResponse;
 import com.module.questionnaire.bean.response.QuestionResponse;
+import com.module.questionnaire.bean.response.RegionalChoiceResponse;
 
 import java.util.Map;
 
@@ -15,6 +16,7 @@ import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.Multipart;
+import rx.Completable;
 import rx.Observable;
 
 public class NewApiRetrofit extends BaseApiRetrofit {
@@ -54,7 +56,6 @@ public class NewApiRetrofit extends BaseApiRetrofit {
         return body;
     }
 
-    //登录
     public Observable<LoginResponse> login(Map<String, String> params) {
         return mApi.login(getRequestBody(params));
     }
@@ -66,5 +67,9 @@ public class NewApiRetrofit extends BaseApiRetrofit {
 
     public Observable<AnswerResponse> getAnswerList() {
         return mApi.getAnswerList();
+    }
+
+    public Observable<RegionalChoiceResponse> getRegionalChoice(Map<String, String> params) {
+        return mApi.getRegionalChoice(getRequestBody(params));
     }
 }
