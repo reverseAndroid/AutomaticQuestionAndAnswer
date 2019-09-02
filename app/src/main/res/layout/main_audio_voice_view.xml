@@ -19,7 +19,7 @@
         <com.module.questionnaire.widget.VoiceView
             android:id="@+id/main_audio_voice_view_animation_vv"
             android:layout_width="match_parent"
-            android:layout_height="55dp"
+            android:layout_height="65dp"
             android:background="@color/bg"
             android:visibility="invisible" />
 

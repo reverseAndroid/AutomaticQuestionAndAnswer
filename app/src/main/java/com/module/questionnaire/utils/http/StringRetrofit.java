@@ -1,9 +1,13 @@
 package com.module.questionnaire.utils.http;
 
+import com.google.gson.Gson;
+
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
 import retrofit2.converter.scalars.ScalarsConverterFactory;
-import rx.Observable;
+import retrofit2.http.Multipart;
 
 /**
  * Created by Administrator on 2019/5/22.
@@ -18,7 +22,7 @@ public class StringRetrofit extends BaseApiRetrofit {
         super();
         //在构造方法中完成对Retrofit接口的初始化
         mApi = new Retrofit.Builder()
-                       .baseUrl(Constant.BASE_URL)
+                       .baseUrl(Constant.URL)
                        .client(getClient())
                        .addConverterFactory(ScalarsConverterFactory.create())
                        .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
@@ -35,5 +39,12 @@ public class StringRetrofit extends BaseApiRetrofit {
             }
         }
         return mInstance;
+    }
+
+    @Multipart
+    private RequestBody getRequestBody(Object obj) {
+        String route = new Gson().toJson(obj);
+        RequestBody body = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), route);
+        return body;
     }
 }

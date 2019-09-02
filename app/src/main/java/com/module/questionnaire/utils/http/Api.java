@@ -2,6 +2,8 @@ package com.module.questionnaire.utils.http;
 
 import com.module.questionnaire.bean.response.AnswerResponse;
 import com.module.questionnaire.bean.response.AppConfigResponse;
+import com.module.questionnaire.bean.response.BaseResponse;
+import com.module.questionnaire.bean.response.BootPlanResponse;
 import com.module.questionnaire.bean.response.LoginResponse;
 import com.module.questionnaire.bean.response.QuestionResponse;
 import com.module.questionnaire.bean.response.RegionalChoiceResponse;
@@ -37,4 +39,12 @@ public interface Api {
     //获取地区
     @POST("api_v4/lead/getAddr")
     Observable<RegionalChoiceResponse> getRegionalChoice(@Body RequestBody requestBody);
+
+    //获取当前借款合约详情
+    @POST
+    Observable<BaseResponse> getLoanContract(@Url String url);
+
+    //获取引导方案
+    @POST("api_v4/lead/lead_plan")
+    Observable<BootPlanResponse> getBootPlan(@Body RequestBody requestBody);
 }

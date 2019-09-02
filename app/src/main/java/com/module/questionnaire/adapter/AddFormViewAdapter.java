@@ -1,8 +1,10 @@
 package com.module.questionnaire.adapter;
 
 import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -50,7 +52,9 @@ public class AddFormViewAdapter extends RecyclerView.Adapter {
         mHolderList.add(holder);
         holder.editText.setHint(mList.get(i).getLabel());
         if (mList.get(i).getLabel().contains("电话")) {
-            holder.editText.setCompoundDrawables(null, null, mContext.getResources().getDrawable(R.drawable.icon_audio_player_answer1), null);
+            Drawable drawable = holder.editText.getContext().getResources().getDrawable(R.mipmap.ic_launcher);
+            drawable.setBounds(0, 0, 45, 45);
+            holder.editText.setCompoundDrawables(null, null, drawable, null);
             holder.editText.setOnDrawableRightListener(() -> {
                 if (mOnItemClickListener != null) {
                     mOnItemClickListener.onItemClick(holder.editText, "0");
@@ -69,7 +73,11 @@ public class AddFormViewAdapter extends RecyclerView.Adapter {
     public String getAllEditText() {
         StringBuilder text = new StringBuilder();
         for (int i = 0; i < mList.size(); i++) {
-            text.append(mList.get(i).getLabel()).append(mHolderList.get(i).editText.getText());
+            if (!TextUtils.isEmpty(mHolderList.get(i).editText.getText())) {
+                text.append(mList.get(i).getLabel()).append(mHolderList.get(i).editText.getText());
+            } else {
+                return "";
+            }
         }
         return text.toString();
     }

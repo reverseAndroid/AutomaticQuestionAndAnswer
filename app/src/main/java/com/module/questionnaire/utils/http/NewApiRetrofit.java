@@ -3,7 +3,8 @@ package com.module.questionnaire.utils.http;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.module.questionnaire.bean.response.AnswerResponse;
-import com.module.questionnaire.bean.response.AppConfigResponse;
+import com.module.questionnaire.bean.response.BaseResponse;
+import com.module.questionnaire.bean.response.BootPlanResponse;
 import com.module.questionnaire.bean.response.LoginResponse;
 import com.module.questionnaire.bean.response.QuestionResponse;
 import com.module.questionnaire.bean.response.RegionalChoiceResponse;
@@ -16,7 +17,6 @@ import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.Multipart;
-import rx.Completable;
 import rx.Observable;
 
 public class NewApiRetrofit extends BaseApiRetrofit {
@@ -71,5 +71,13 @@ public class NewApiRetrofit extends BaseApiRetrofit {
 
     public Observable<RegionalChoiceResponse> getRegionalChoice(Map<String, String> params) {
         return mApi.getRegionalChoice(getRequestBody(params));
+    }
+
+    public Observable<BaseResponse> getLoanContract(String url) {
+        return mApi.getLoanContract(url);
+    }
+
+    public Observable<BootPlanResponse> getBootPlan(Map<String, String> params) {
+        return mApi.getBootPlan(getRequestBody(params));
     }
 }

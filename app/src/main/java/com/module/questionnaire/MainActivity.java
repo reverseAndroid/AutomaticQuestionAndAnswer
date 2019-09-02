@@ -79,14 +79,10 @@ import com.module.questionnaire.utils.StringBitmapUtil;
 import com.module.questionnaire.utils.http.ApiRetrofit;
 import com.module.questionnaire.utils.http.Constant;
 import com.module.questionnaire.utils.http.NewApiRetrofit;
-import com.module.questionnaire.widget.DrawableEditText;
+import com.module.questionnaire.utils.http.StringRetrofit;
 import com.module.questionnaire.widget.VoiceView;
 import com.zhihu.matisse.Matisse;
 import com.zhihu.matisse.MimeType;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
@@ -307,10 +303,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 addEditTextView();
                 break;
             case 1:
-                if (mAnswerResponse.getData().get(id).size() > 2) {
-                    addRecyclerView(id);
+                //这里数据不全，如果数据全了，不需要这里的else
+                if (mAnswerResponse.getData().get(id) != null) {
+                    if (mAnswerResponse.getData().get(id).size() > 2) {
+                        addRecyclerView(id);
+                    } else {
+                        addRadioView(id);
+                    }
                 } else {
-                    addRadioView(id);
+                    QuestionAnswerBean bean = new QuestionAnswerBean();
+                    bean.setType(getAnswerType(0));
+                    bean.setLabel("测试");
+                    mList.add(bean);
+                    mMainAdapter.notifyItemInserted(mList.size());
+                    mLinearLayout.removeAllViews();
+                    mLinearLayout.setVisibility(View.GONE);
                 }
                 break;
             case 2:
@@ -341,13 +348,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 addTimeSelectView();
                 break;
             case 11:
-                Toast.makeText(this, "暂无", Toast.LENGTH_SHORT).show();
+                //返回11，直接往下继续走，由于上一步没有让mIndex自增，这里的mIndex还是上一步的，所以需要加个1
+                QuestionAnswerBean bean = new QuestionAnswerBean();
+                bean.setId(mQuestionResponse.getData().get(mIndex + 1).getId());
+                bean.setType(getQuestionType(mQuestionResponse.getData().get(mIndex + 1).getType()));
+                bean.setLabel(mQuestionResponse.getData().get(mIndex + 1).getLabel());
+                mList.add(bean);
+                mMainAdapter.notifyItemInserted(mList.size());
                 break;
             case 12:
                 addAudioVoiceView();
                 break;
             case 13:
                 addFormView();
+                break;
+            case 14:
+                break;
+            case 15:
+                startLoanContractTask(mQuestionResponse.getData().get(mIndex));
                 break;
             default:
                 break;
@@ -367,6 +385,38 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mList.add(bean);
         mMainAdapter.notifyItemInserted(mList.size());
         updateNestScrollView(false);
+    }
+
+    //动态添加输入框的EditTextView
+    private void addEditTextView() {
+        mLinearLayout.setVisibility(View.VISIBLE);
+        View view = LayoutInflater.from(this).inflate(R.layout.main_edit_view, null);
+        ImageView imageView = view.findViewById(R.id.main_edit_view_determine_iv);
+        EditText editText = view.findViewById(R.id.main_edit_view_input_et);
+        editText.setHint(mQuestionResponse.getData().get(mIndex).getLabel());
+        imageView.setOnClickListener(view1 -> {
+            if (!TextUtils.isEmpty(editText.getText())) {
+                QuestionAnswerBean bean = new QuestionAnswerBean();
+                bean.setType(getAnswerType(0));
+                bean.setLabel(editText.getText().toString());
+                mList.add(bean);
+                mMainAdapter.notifyItemInserted(mList.size());
+                mLinearLayout.removeAllViews();
+                mLinearLayout.setVisibility(View.GONE);
+            } else {
+                Toast.makeText(MainActivity.this, "不能为空", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        mLinearLayout.addView(view);
+
+//        QuestionAnswerBean bean = new QuestionAnswerBean();
+//        bean.setType(getAnswerType(0));
+//        bean.setLabel("测试");
+//        mList.add(bean);
+//        mMainAdapter.notifyItemInserted(mList.size());
+//        mLinearLayout.removeAllViews();
+//        mLinearLayout.setVisibility(View.GONE);
     }
 
     //动态添加单选的RecyclerView
@@ -447,36 +497,50 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        mLinearLayout.setVisibility(View.GONE);
     }
 
-    //动态添加输入框的EditTextView
-    private void addEditTextView() {
+    //动态添加多选的MultipleSelectionView
+    private void addMultipleSelectionView() {
         mLinearLayout.setVisibility(View.VISIBLE);
-        View view = LayoutInflater.from(this).inflate(R.layout.main_edit_view, null);
-        ImageView imageView = view.findViewById(R.id.main_edit_view_determine_iv);
-        EditText editText = view.findViewById(R.id.main_edit_view_input_et);
-        editText.setHint(mQuestionResponse.getData().get(mIndex).getLabel());
-        imageView.setOnClickListener(view1 -> {
-            if (!TextUtils.isEmpty(editText.getText())) {
-                QuestionAnswerBean bean = new QuestionAnswerBean();
-                bean.setType(getAnswerType(0));
-                bean.setLabel(editText.getText().toString());
-                mList.add(bean);
-                mMainAdapter.notifyItemInserted(mList.size());
-                mLinearLayout.removeAllViews();
-                mLinearLayout.setVisibility(View.GONE);
-            } else {
-                Toast.makeText(MainActivity.this, "不能为空", Toast.LENGTH_SHORT).show();
+        View view = LayoutInflater.from(this).inflate(R.layout.main_multiple_selection_view, null);
+        RecyclerView recyclerView = view.findViewById(R.id.main_multiple_selection_rv);
+        TextView textView = view.findViewById(R.id.main_multiple_selection_confirm_tv);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        layoutManager.setOrientation(OrientationHelper.VERTICAL);
+        recyclerView.setLayoutManager(layoutManager);
+
+        List<MultipleSelectionBean> list = new ArrayList<>();
+        for (int i = 0; i < 8; i++) {
+            MultipleSelectionBean bean = new MultipleSelectionBean();
+            bean.setTitle("多选项" + i);
+            bean.setSelect(false);
+            list.add(bean);
+        }
+
+        MultipleSelectionViewAdapter adapter = new MultipleSelectionViewAdapter(this, list);
+        recyclerView.setAdapter(adapter);
+        adapter.setOnItemClickListener((i, isSelection) -> {
+            list.get(i).setSelect(isSelection);
+            adapter.notifyItemChanged(i);
+        });
+
+        textView.setOnClickListener(view1 -> {
+            QuestionAnswerBean bean = new QuestionAnswerBean();
+            bean.setType(getAnswerType(0));
+
+            List<String> dataList = new ArrayList<>();
+            for (int i = 0; i < list.size(); i++) {
+                if (list.get(i).isSelect()) {
+                    dataList.add(list.get(i).getTitle());
+                }
             }
+
+            bean.setLabel(new Gson().toJson(dataList));
+            mList.add(bean);
+            mMainAdapter.notifyItemInserted(mList.size());
+            mLinearLayout.removeAllViews();
+            mLinearLayout.setVisibility(View.GONE);
         });
 
         mLinearLayout.addView(view);
-
-//        QuestionAnswerBean bean = new QuestionAnswerBean();
-//        bean.setType(getAnswerType(0));
-//        bean.setLabel("测试");
-//        mList.add(bean);
-//        mMainAdapter.notifyItemInserted(mList.size());
-//        mLinearLayout.removeAllViews();
-//        mLinearLayout.setVisibility(View.GONE);
     }
 
     //动态添加上传图片的UploadView
@@ -533,141 +597,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         startActivityForResult(intent, OPEN_CAMERA);
     }
 
-    //动态添加选择省市区的RegionalChoiceView
-    private void addRegionalChoiceView() {
+    //动态添加上传文件的UploadFileView
+    private void addUploadFileView() {
         mLinearLayout.setVisibility(View.VISIBLE);
-        View view = LayoutInflater.from(this).inflate(R.layout.main_regional_choice_view, null);
-        TextView textFirst = view.findViewById(R.id.main_regional_choice_view_first_tv);
-        View viewFirst = view.findViewById(R.id.main_regional_choice_view_first_v);
+        View view = LayoutInflater.from(this).inflate(R.layout.main_upload_file_view, null);
+        LinearLayout linearFile = view.findViewById(R.id.main_upload_file_view_file_ll);
 
-        TextView textSecond = view.findViewById(R.id.main_regional_choice_view_second_tv);
-        View viewSecond = view.findViewById(R.id.main_regional_choice_view_second_v);
-
-        TextView textThird = view.findViewById(R.id.main_regional_choice_view_third_tv);
-        View viewThird = view.findViewById(R.id.main_regional_choice_view_third_v);
-
-        RecyclerView recyclerView = view.findViewById(R.id.main_regional_choice_view_rv);
-        LinearLayoutManager layoutManagerInfo = new LinearLayoutManager(this);
-        recyclerView.setLayoutManager(layoutManagerInfo);
-        layoutManagerInfo.setOrientation(OrientationHelper.VERTICAL);
-        mCurrentShowList = mFirstList;
-        AddRegionalChoiceViewAdapter adapter = new AddRegionalChoiceViewAdapter(this, mCurrentShowList);
-        recyclerView.setAdapter(adapter);
-        List<String> list = new ArrayList<>();
-        adapter.setOnItemListener((id, value) -> {
-            list.add(value);
-            if (list.size() == 1) {
-                List<RegionalChoiceBean> secondList = new ArrayList<>();
-                for (RegionalChoiceBean bean : mAllRegionalChoiceList) {
-                    if (bean.getPid().equals(id)) {
-                        secondList.add(bean);
-                    }
-                }
-
-                mCurrentShowList.clear();
-                mCurrentShowList.addAll(secondList);
-
-                textFirst.setText("已选择");
-                textFirst.setTextColor(getResources().getColor(R.color.regional_choice_text));
-                viewFirst.setVisibility(View.INVISIBLE);
-
-                textSecond.setText("选择分区");
-                textSecond.setTextColor(getResources().getColor(R.color.black));
-                textSecond.setVisibility(View.VISIBLE);
-                viewSecond.setVisibility(View.VISIBLE);
-            } else if (list.size() == 2) {
-                List<RegionalChoiceBean> thirdList = new ArrayList<>();
-                for (RegionalChoiceBean bean : mAllRegionalChoiceList) {
-                    if (bean.getPid().equals(id)) {
-                        thirdList.add(bean);
-                    }
-                }
-
-                mCurrentShowList.clear();
-                mCurrentShowList.addAll(thirdList);
-
-                textSecond.setText("已选择");
-                textSecond.setTextColor(getResources().getColor(R.color.regional_choice_text));
-                viewSecond.setVisibility(View.INVISIBLE);
-
-                if (mCurrentShowList.size() == 0) {
-                    QuestionAnswerBean bean = new QuestionAnswerBean();
-                    bean.setType(getAnswerType(0));
-
-                    StringBuilder text = new StringBuilder();
-                    for (String s : list) {
-                        text.append(s);
-                    }
-
-                    bean.setLabel(text.toString());
-                    mList.add(bean);
-                    mMainAdapter.notifyItemInserted(mList.size());
-                    mLinearLayout.removeAllViews();
-                    mLinearLayout.setVisibility(View.GONE);
-                } else {
-                    textThird.setText("选择分区");
-                    textThird.setTextColor(getResources().getColor(R.color.black));
-                    textThird.setVisibility(View.VISIBLE);
-                    viewThird.setVisibility(View.VISIBLE);
-                }
-            } else if (list.size() == 3) {
-                QuestionAnswerBean bean = new QuestionAnswerBean();
-                bean.setType(getAnswerType(0));
-
-                StringBuilder text = new StringBuilder();
-                for (String s : list) {
-                    text.append(s);
-                }
-
-                bean.setLabel(text.toString());
-                mList.add(bean);
-                mMainAdapter.notifyItemInserted(mList.size());
-                mLinearLayout.removeAllViews();
-                mLinearLayout.setVisibility(View.GONE);
-            }
-
-            adapter.notifyDataSetChanged();
-        });
-
-        mLinearLayout.addView(view);
-    }
-
-    //动态添加自定义签名的CustomizeSignatureView
-    private void addCustomizeSignatureView() {
-        mLinearLayout.setVisibility(View.VISIBLE);
-        View view = LayoutInflater.from(this).inflate(R.layout.main_customize_signature_view, null);
-        SignaturePad signaturePad = view.findViewById(R.id.main_customize_signature_view_sp);
-        Button buttonClear = view.findViewById(R.id.main_customize_signature_view_clear_btn);
-        Button buttonSubmit = view.findViewById(R.id.main_customize_signature_view_submit_btn);
-        signaturePad.setOnSignedListener(new SignaturePad.OnSignedListener() {
-            @Override
-            public void onStartSigning() {
-                //Event triggered when the pad is touched
-            }
-
-            @Override
-            public void onSigned() {
-                buttonClear.setEnabled(true);
-                buttonSubmit.setEnabled(true);
-            }
-
-            @Override
-            public void onClear() {
-                buttonClear.setEnabled(false);
-                buttonSubmit.setEnabled(false);
-            }
-        });
-
-        buttonClear.setOnClickListener(view1 -> signaturePad.clear());
-        buttonSubmit.setOnClickListener(view1 -> {
-            Bitmap signatureBitmap = signaturePad.getSignatureBitmap();
-            QuestionAnswerBean bean = new QuestionAnswerBean();
-            bean.setType(getAnswerType(1));
-            bean.setLabel(StringBitmapUtil.BitMapToString(signatureBitmap));
-            mList.add(bean);
-            mMainAdapter.notifyItemInserted(mList.size());
-            mLinearLayout.removeAllViews();
-            mLinearLayout.setVisibility(View.GONE);
+        linearFile.setOnClickListener(view1 -> {
+            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+            intent.setType("*/*");
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            startActivityForResult(intent, OPEN_FILE);
         });
 
         mLinearLayout.addView(view);
@@ -819,6 +759,301 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return y >= top && y <= bottom && x >= left && x <= right;
     }
 
+    //动态添加自定义签名的CustomizeSignatureView
+    private void addCustomizeSignatureView() {
+        mLinearLayout.setVisibility(View.VISIBLE);
+        View view = LayoutInflater.from(this).inflate(R.layout.main_customize_signature_view, null);
+        SignaturePad signaturePad = view.findViewById(R.id.main_customize_signature_view_sp);
+        Button buttonClear = view.findViewById(R.id.main_customize_signature_view_clear_btn);
+        Button buttonSubmit = view.findViewById(R.id.main_customize_signature_view_submit_btn);
+        signaturePad.setOnSignedListener(new SignaturePad.OnSignedListener() {
+            @Override
+            public void onStartSigning() {
+                //Event triggered when the pad is touched
+            }
+
+            @Override
+            public void onSigned() {
+                buttonClear.setEnabled(true);
+                buttonSubmit.setEnabled(true);
+            }
+
+            @Override
+            public void onClear() {
+                buttonClear.setEnabled(false);
+                buttonSubmit.setEnabled(false);
+            }
+        });
+
+        buttonClear.setOnClickListener(view1 -> signaturePad.clear());
+        buttonSubmit.setOnClickListener(view1 -> {
+            Bitmap signatureBitmap = signaturePad.getSignatureBitmap();
+            QuestionAnswerBean bean = new QuestionAnswerBean();
+            bean.setType(getAnswerType(1));
+            bean.setLabel(StringBitmapUtil.BitMapToString(signatureBitmap));
+            mList.add(bean);
+            mMainAdapter.notifyItemInserted(mList.size());
+            mLinearLayout.removeAllViews();
+            mLinearLayout.setVisibility(View.GONE);
+        });
+
+        mLinearLayout.addView(view);
+    }
+
+    //上传通讯录
+    private void uploadContact() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_CONTACTS}, READ_CONTACTS);
+        } else {
+            readContacts();
+        }
+    }
+
+    //读取联系人
+    private void readContacts() {
+        try (Cursor cursor = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, null, null, null)) {
+            if (cursor != null) {
+                while (cursor.moveToNext()) {
+                    String displayName = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+                    String number = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                    ContactBean bean = new ContactBean();
+                    bean.setName(displayName);
+                    bean.setPhone(number);
+                    mContactList.add(bean);
+                }
+            }
+
+            QuestionAnswerBean bean = new QuestionAnswerBean();
+            bean.setType(getAnswerType(0));
+            bean.setLabel("已经上传通讯录");
+            mList.add(bean);
+            mMainAdapter.notifyItemInserted(mList.size());
+            mLinearLayout.removeAllViews();
+            mLinearLayout.setVisibility(View.GONE);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    //上传定位
+    private void uploadPosition() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, GPS);
+        } else {
+            //获取地理位置管理器
+            LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            //获取所有可用的位置提供器
+            List<String> providers = locationManager.getProviders(true);
+            int counter = 0;
+            for (String provider : providers) {
+                counter++;
+                Location location = locationManager.getLastKnownLocation(provider);
+                setLatitudeLongitudeToLocation(location);
+                if (counter == providers.size() && location == null) {
+                    QuestionAnswerBean bean = new QuestionAnswerBean();
+                    bean.setType(getAnswerType(0));
+                    bean.setLabel("获取不到您的定位，请检查网络或者GPS是否开启");
+                    mList.add(bean);
+                    mMainAdapter.notifyItemInserted(mList.size());
+                    mLinearLayout.removeAllViews();
+                    mLinearLayout.setVisibility(View.GONE);
+                }
+            }
+        }
+    }
+
+    //经纬度转换成地点
+    private void setLatitudeLongitudeToLocation(Location location) {
+        if (location != null && !mIsLocation) {
+            double latitude = location.getLatitude();
+            double longitude = location.getLongitude();
+            String position = GetAddressUtil.getAddress(this, latitude, longitude);
+            QuestionAnswerBean bean = new QuestionAnswerBean();
+            bean.setType(getAnswerType(0));
+            bean.setLabel(position);
+            mList.add(bean);
+            mMainAdapter.notifyItemInserted(mList.size());
+            mLinearLayout.removeAllViews();
+            mLinearLayout.setVisibility(View.GONE);
+            mIsLocation = true;
+        }
+    }
+
+    //动态添加选择省市区的RegionalChoiceView
+    private void addRegionalChoiceView() {
+        mLinearLayout.setVisibility(View.VISIBLE);
+        View view = LayoutInflater.from(this).inflate(R.layout.main_regional_choice_view, null);
+        TextView textFirst = view.findViewById(R.id.main_regional_choice_view_first_tv);
+        View viewFirst = view.findViewById(R.id.main_regional_choice_view_first_v);
+
+        TextView textSecond = view.findViewById(R.id.main_regional_choice_view_second_tv);
+        View viewSecond = view.findViewById(R.id.main_regional_choice_view_second_v);
+
+        TextView textThird = view.findViewById(R.id.main_regional_choice_view_third_tv);
+        View viewThird = view.findViewById(R.id.main_regional_choice_view_third_v);
+
+        RecyclerView recyclerView = view.findViewById(R.id.main_regional_choice_view_rv);
+        LinearLayoutManager layoutManagerInfo = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(layoutManagerInfo);
+        layoutManagerInfo.setOrientation(OrientationHelper.VERTICAL);
+        mCurrentShowList = mFirstList;
+        AddRegionalChoiceViewAdapter adapter = new AddRegionalChoiceViewAdapter(this, mCurrentShowList);
+        recyclerView.setAdapter(adapter);
+        List<String> list = new ArrayList<>();
+        adapter.setOnItemListener((id, value) -> {
+            //选择分区的逻辑是，用一个recyclerView展示，选择一级地区后，清空list，将二级地区遍历出来，然后刷新adapter，三级也是一样
+            list.add(value);
+            if (list.size() == 1) {
+                List<RegionalChoiceBean> secondList = new ArrayList<>();
+                for (RegionalChoiceBean bean : mAllRegionalChoiceList) {
+                    if (bean.getPid().equals(id)) {
+                        secondList.add(bean);
+                    }
+                }
+
+                mCurrentShowList.clear();
+                mCurrentShowList.addAll(secondList);
+
+                textFirst.setText("已选择");
+                textFirst.setTextColor(getResources().getColor(R.color.regional_choice_text));
+                viewFirst.setVisibility(View.INVISIBLE);
+
+                textSecond.setText("选择分区");
+                textSecond.setTextColor(getResources().getColor(R.color.black));
+                textSecond.setVisibility(View.VISIBLE);
+                viewSecond.setVisibility(View.VISIBLE);
+            } else if (list.size() == 2) {
+                List<RegionalChoiceBean> thirdList = new ArrayList<>();
+                for (RegionalChoiceBean bean : mAllRegionalChoiceList) {
+                    if (bean.getPid().equals(id)) {
+                        thirdList.add(bean);
+                    }
+                }
+
+                mCurrentShowList.clear();
+                mCurrentShowList.addAll(thirdList);
+
+                textSecond.setText("已选择");
+                textSecond.setTextColor(getResources().getColor(R.color.regional_choice_text));
+                viewSecond.setVisibility(View.INVISIBLE);
+
+                if (mCurrentShowList.size() == 0) {
+                    QuestionAnswerBean bean = new QuestionAnswerBean();
+                    bean.setType(getAnswerType(0));
+
+                    StringBuilder text = new StringBuilder();
+                    for (String s : list) {
+                        text.append(s);
+                    }
+
+                    bean.setLabel(text.toString());
+                    mList.add(bean);
+                    mMainAdapter.notifyItemInserted(mList.size());
+                    mLinearLayout.removeAllViews();
+                    mLinearLayout.setVisibility(View.GONE);
+                } else {
+                    textThird.setText("选择分区");
+                    textThird.setTextColor(getResources().getColor(R.color.black));
+                    textThird.setVisibility(View.VISIBLE);
+                    viewThird.setVisibility(View.VISIBLE);
+                }
+            } else if (list.size() == 3) {
+                QuestionAnswerBean bean = new QuestionAnswerBean();
+                bean.setType(getAnswerType(0));
+
+                StringBuilder text = new StringBuilder();
+                for (String s : list) {
+                    text.append(s);
+                }
+
+                bean.setLabel(text.toString());
+                mList.add(bean);
+                mMainAdapter.notifyItemInserted(mList.size());
+                mLinearLayout.removeAllViews();
+                mLinearLayout.setVisibility(View.GONE);
+            }
+
+            adapter.notifyDataSetChanged();
+        });
+
+        mLinearLayout.addView(view);
+    }
+
+    //动态添加表单的FormView
+    private void addFormView() {
+        mLinearLayout.setVisibility(View.VISIBLE);
+        View view = LayoutInflater.from(this).inflate(R.layout.main_form_view, null);
+        List<QuestionResponse.DataBean> list = analyzeJson(mQuestionResponse.getData().get(mIndex).getComments());
+        RecyclerView recyclerView = view.findViewById(R.id.main_form_view_rv);
+        LinearLayoutManager layoutManagerInfo = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(layoutManagerInfo);
+        layoutManagerInfo.setOrientation(OrientationHelper.VERTICAL);
+        AddFormViewAdapter adapter = new AddFormViewAdapter(this, list);
+        recyclerView.setAdapter(adapter);
+        adapter.setOnItemListener((editText, value) -> {
+            mEditPhone = null;
+            mEditPhone = editText;
+            jumpContact();
+        });
+
+        TextView textConfirm = view.findViewById(R.id.main_form_view_confirm_tv);
+        textConfirm.setOnClickListener(view1 -> {
+            if (adapter.getAllEditText().equals("")) {
+                Toast.makeText(this, "请填写完整", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            QuestionAnswerBean bean = new QuestionAnswerBean();
+            bean.setType(getAnswerType(0));
+            bean.setLabel(adapter.getAllEditText());
+            mList.add(bean);
+            mMainAdapter.notifyItemInserted(mList.size());
+            mLinearLayout.removeAllViews();
+            mLinearLayout.setVisibility(View.GONE);
+        });
+
+        mLinearLayout.addView(view);
+    }
+
+    //解析QuestionResponse里面的comments
+    private List<QuestionResponse.DataBean> analyzeJson(Object json) {
+        String data = json.toString();
+        List<QuestionResponse.DataBean> list = new Gson().fromJson(data, new TypeToken<List<QuestionResponse.DataBean>>() {
+        }.getType());
+        return list;
+    }
+
+    //跳转到通讯录选择联系人
+    private void jumpContact() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_CONTACTS}, SELECTION_CONTACT);
+        } else {
+            Intent intent = new Intent(Intent.ACTION_PICK);
+            Uri uri = Uri.parse("content://contacts");
+            intent.setData(uri);
+            intent.setType(ContactsContract.CommonDataKinds.Phone.CONTENT_TYPE);
+            startActivityForResult(intent, SELECTION_CONTACT);
+        }
+    }
+
+    //请求当前借款合约内容
+    private void startLoanContractTask(QuestionResponse.DataBean dataBean) {
+        String url = dataBean.getComments().toString();
+        NewApiRetrofit.getInstance().getLoanContract(url)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(baseResponse -> {
+                    if (baseResponse.isSuccess()) {
+                        QuestionAnswerBean bean = new QuestionAnswerBean();
+                        bean.setType(getQuestionType(dataBean.getType()));
+                        bean.setLabel(baseResponse.getData());
+                        bean.setContinuous(true);
+                        mList.add(bean);
+                        mMainAdapter.notifyItemInserted(mList.size());
+                    }
+                }, throwable -> LogUtils.e(throwable.getMessage()));
+    }
+
     @SuppressLint("HandlerLeak")
     private Handler mHandler = new Handler() {
         @Override
@@ -887,200 +1122,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         timePickerView.findViewById(R.id.btnCancel).setVisibility(View.INVISIBLE);
         timePickerView.show(mLinearLayout);
-    }
-
-    //动态添加上传文件的UploadFileView
-    private void addUploadFileView() {
-        mLinearLayout.setVisibility(View.VISIBLE);
-        View view = LayoutInflater.from(this).inflate(R.layout.main_upload_file_view, null);
-        LinearLayout linearFile = view.findViewById(R.id.main_upload_file_view_file_ll);
-
-        linearFile.setOnClickListener(view1 -> {
-            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-            intent.setType("*/*");
-            intent.addCategory(Intent.CATEGORY_OPENABLE);
-            startActivityForResult(intent, OPEN_FILE);
-        });
-
-        mLinearLayout.addView(view);
-    }
-
-    //动态添加表单的FormView
-    private void addFormView() {
-        mLinearLayout.setVisibility(View.VISIBLE);
-        View view = LayoutInflater.from(this).inflate(R.layout.main_form_view, null);
-        List<QuestionResponse.DataBean> list = analyzeJson(mQuestionResponse.getData().get(mIndex).getComments());
-        RecyclerView recyclerView = view.findViewById(R.id.main_form_view_rv);
-        LinearLayoutManager layoutManagerInfo = new LinearLayoutManager(this);
-        recyclerView.setLayoutManager(layoutManagerInfo);
-        layoutManagerInfo.setOrientation(OrientationHelper.VERTICAL);
-        AddFormViewAdapter adapter = new AddFormViewAdapter(this, list);
-        recyclerView.setAdapter(adapter);
-        adapter.setOnItemListener((editText, value) -> {
-            mEditPhone = null;
-            mEditPhone = editText;
-            jumpContact();
-        });
-
-        TextView textConfirm = view.findViewById(R.id.main_form_view_confirm_tv);
-        textConfirm.setOnClickListener(view1 -> {
-            QuestionAnswerBean bean = new QuestionAnswerBean();
-            bean.setType(getAnswerType(0));
-            bean.setLabel(adapter.getAllEditText());
-            mList.add(bean);
-            mMainAdapter.notifyItemInserted(mList.size());
-            mLinearLayout.removeAllViews();
-            mLinearLayout.setVisibility(View.GONE);
-        });
-
-        mLinearLayout.addView(view);
-    }
-
-    //解析QuestionResponse里面的comments
-    private List<QuestionResponse.DataBean> analyzeJson(Object json) {
-        String data = json.toString();
-        List<QuestionResponse.DataBean> list = new Gson().fromJson(data, new TypeToken<List<QuestionResponse.DataBean>>() {
-        }.getType());
-        return list;
-    }
-
-    //跳转到通讯录选择联系人
-    private void jumpContact() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_CONTACTS}, SELECTION_CONTACT);
-        } else {
-            Intent intent = new Intent(Intent.ACTION_PICK);
-            Uri uri = Uri.parse("content://contacts");
-            intent.setData(uri);
-            intent.setType(ContactsContract.CommonDataKinds.Phone.CONTENT_TYPE);
-            startActivityForResult(intent, SELECTION_CONTACT);
-        }
-    }
-
-    //动态添加多选的MultipleSelectionView
-    private void addMultipleSelectionView() {
-        mLinearLayout.setVisibility(View.VISIBLE);
-        View view = LayoutInflater.from(this).inflate(R.layout.main_multiple_selection_view, null);
-        RecyclerView recyclerView = view.findViewById(R.id.main_multiple_selection_rv);
-        TextView textView = view.findViewById(R.id.main_multiple_selection_confirm_tv);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-        layoutManager.setOrientation(OrientationHelper.VERTICAL);
-        recyclerView.setLayoutManager(layoutManager);
-
-        List<MultipleSelectionBean> list = new ArrayList<>();
-        for (int i = 0; i < 8; i++) {
-            MultipleSelectionBean bean = new MultipleSelectionBean();
-            bean.setTitle("多选项" + i);
-            bean.setSelect(false);
-            list.add(bean);
-        }
-
-        MultipleSelectionViewAdapter adapter = new MultipleSelectionViewAdapter(this, list);
-        recyclerView.setAdapter(adapter);
-        adapter.setOnItemClickListener((i, isSelection) -> {
-            list.get(i).setSelect(isSelection);
-            adapter.notifyItemChanged(i);
-        });
-
-        textView.setOnClickListener(view1 -> {
-            QuestionAnswerBean bean = new QuestionAnswerBean();
-            bean.setType(getAnswerType(0));
-
-            List<String> dataList = new ArrayList<>();
-            for (int i = 0; i < list.size(); i++) {
-                if (list.get(i).isSelect()) {
-                    dataList.add(list.get(i).getTitle());
-                }
-            }
-
-            bean.setLabel(new Gson().toJson(dataList));
-            mList.add(bean);
-            mMainAdapter.notifyItemInserted(mList.size());
-            mLinearLayout.removeAllViews();
-            mLinearLayout.setVisibility(View.GONE);
-        });
-
-        mLinearLayout.addView(view);
-    }
-
-    //上传定位
-    private void uploadPosition() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, GPS);
-        } else {
-            //获取地理位置管理器
-            LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-            //获取所有可用的位置提供器
-            List<String> providers = locationManager.getProviders(true);
-            int counter = 0;
-            for (String provider : providers) {
-                counter++;
-                Location location = locationManager.getLastKnownLocation(provider);
-                setLatitudeLongitudeToLocation(location);
-                if (counter == providers.size() && location == null) {
-                    QuestionAnswerBean bean = new QuestionAnswerBean();
-                    bean.setType(getAnswerType(0));
-                    bean.setLabel("获取不到您的定位，请检查网络或者GPS是否开启");
-                    mList.add(bean);
-                    mMainAdapter.notifyItemInserted(mList.size());
-                    mLinearLayout.removeAllViews();
-                    mLinearLayout.setVisibility(View.GONE);
-                }
-            }
-        }
-    }
-
-    //经纬度转换成地点
-    private void setLatitudeLongitudeToLocation(Location location) {
-        if (location != null && !mIsLocation) {
-            double latitude = location.getLatitude();
-            double longitude = location.getLongitude();
-            String position = GetAddressUtil.getAddress(this, latitude, longitude);
-            QuestionAnswerBean bean = new QuestionAnswerBean();
-            bean.setType(getAnswerType(0));
-            bean.setLabel(position);
-            mList.add(bean);
-            mMainAdapter.notifyItemInserted(mList.size());
-            mLinearLayout.removeAllViews();
-            mLinearLayout.setVisibility(View.GONE);
-            mIsLocation = true;
-        }
-    }
-
-    //上传通讯录
-    private void uploadContact() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_CONTACTS}, READ_CONTACTS);
-        } else {
-            readContacts();
-        }
-    }
-
-    //读取联系人
-    private void readContacts() {
-        try (Cursor cursor = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, null, null, null)) {
-            if (cursor != null) {
-                while (cursor.moveToNext()) {
-                    String displayName = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
-                    String number = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-                    ContactBean bean = new ContactBean();
-                    bean.setName(displayName);
-                    bean.setPhone(number);
-                    mContactList.add(bean);
-                }
-            }
-
-            QuestionAnswerBean bean = new QuestionAnswerBean();
-            bean.setType(getAnswerType(0));
-            bean.setLabel("已经上传通讯录");
-            mList.add(bean);
-            mMainAdapter.notifyItemInserted(mList.size());
-            mLinearLayout.removeAllViews();
-            mLinearLayout.setVisibility(View.GONE);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     @Override
@@ -1175,13 +1216,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Toast.makeText(this, "您可以开始发送语音了", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(this, "您将不能发送语音", Toast.LENGTH_SHORT).show();
-                    QuestionAnswerBean bean = new QuestionAnswerBean();
-                    bean.setType(getAnswerType(0));
-                    bean.setLabel("您将不能发送语音");
-                    mList.add(bean);
-                    mMainAdapter.notifyItemInserted(mList.size());
-                    mLinearLayout.removeAllViews();
-                    mLinearLayout.setVisibility(View.GONE);
+//                    QuestionAnswerBean bean = new QuestionAnswerBean();
+//                    bean.setType(getAnswerType(0));
+//                    bean.setLabel("您将不能发送语音");
+//                    mList.add(bean);
+//                    mMainAdapter.notifyItemInserted(mList.size());
+//                    mLinearLayout.removeAllViews();
+//                    mLinearLayout.setVisibility(View.GONE);
                 }
                 break;
             case GPS:
@@ -1243,6 +1284,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case 9:
             case 10:
             case 11:
+            case 15:
                 typeText = "文本问题";
                 break;
             case 5:

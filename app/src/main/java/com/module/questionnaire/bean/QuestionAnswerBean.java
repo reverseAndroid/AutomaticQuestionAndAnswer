@@ -7,6 +7,8 @@ public class QuestionAnswerBean {
     private int id;
     private String type;
     private String label;
+    //是否是连续问题
+    private boolean isContinuous;
     private List<Item> items;
 
     public int getId() {
@@ -31,6 +33,14 @@ public class QuestionAnswerBean {
 
     public void setLabel(String label) {
         this.label = label;
+    }
+
+    public boolean isContinuous() {
+        return isContinuous;
+    }
+
+    public void setContinuous(boolean continuous) {
+        isContinuous = continuous;
     }
 
     public List<Item> getItems() {

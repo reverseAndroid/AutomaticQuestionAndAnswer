@@ -34,7 +34,6 @@ public class DrawableEditText extends android.support.v7.widget.AppCompatEditTex
                 if (drawableLeft != null && event.getRawX() <= (getLeft() + getTotalPaddingLeft() + drawableLeft.getBounds().width())) {
                     // 执行DrawableLeft点击事件
                     onDrawableLeftListener.onDrawableLeftClick();
-                    //
                     return true;
                 }
             }

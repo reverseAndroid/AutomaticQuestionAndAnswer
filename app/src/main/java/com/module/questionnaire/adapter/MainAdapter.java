@@ -108,7 +108,11 @@ public class MainAdapter extends RecyclerView.Adapter {
         Handler handler = new Handler(Looper.getMainLooper());
         handler.postDelayed(() -> {
             if (mItemUpdateListener != null) {
-                mItemUpdateListener.onQuestionInteraction(String.valueOf(mList.get(position).getId()));
+                if (mList.get(position).isContinuous()) {
+                    mItemUpdateListener.onAnswerInteraction();
+                } else {
+                    mItemUpdateListener.onQuestionInteraction(String.valueOf(mList.get(position).getId()));
+                }
             }
 
             holder.mLoadingView.stopAnim();
