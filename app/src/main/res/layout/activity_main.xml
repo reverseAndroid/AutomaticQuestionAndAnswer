@@ -51,10 +51,10 @@
         android:id="@+id/main_nsv"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:background="@color/bg"
         android:fillViewport="true"
         android:overScrollMode="never"
         android:scrollbars="none"
-        android:background="@color/bg"
         app:layout_constraintBottom_toTopOf="@id/main_answer_option_ll"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -73,18 +73,11 @@
                 android:orientation="vertical"
                 android:paddingTop="10dp">
 
-                <FrameLayout
-                    android:layout_width="150dp"
-                    android:layout_height="150dp"
-                    android:background="@drawable/main_customer_service_avatar">
-
-                    <ImageView
-                        android:id="@+id/main_customer_service_avatar_iv"
-                        android:layout_width="146dp"
-                        android:layout_height="146dp"
-                        android:layout_gravity="center" />
-
-                </FrameLayout>
+                <ImageView
+                    android:id="@+id/main_customer_service_avatar_iv"
+                    android:layout_width="146dp"
+                    android:layout_height="146dp"
+                    android:layout_gravity="center" />
 
                 <TextView
                     android:id="@+id/main_customer_service_name_tv"

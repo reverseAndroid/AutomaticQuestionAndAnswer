@@ -52,7 +52,7 @@ public class AddFormViewAdapter extends RecyclerView.Adapter {
         mHolderList.add(holder);
         holder.editText.setHint(mList.get(i).getLabel());
         if (mList.get(i).getLabel().contains("电话")) {
-            Drawable drawable = holder.editText.getContext().getResources().getDrawable(R.mipmap.ic_launcher);
+            Drawable drawable = holder.editText.getContext().getResources().getDrawable(R.drawable.icon_form_contact);
             drawable.setBounds(0, 0, 45, 45);
             holder.editText.setCompoundDrawables(null, null, drawable, null);
             holder.editText.setOnDrawableRightListener(() -> {

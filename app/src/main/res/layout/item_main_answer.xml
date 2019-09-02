@@ -27,9 +27,9 @@
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:layout_marginEnd="10dp"
-            android:background="@drawable/item_main_answer_bg"
+            android:background="@drawable/icon_chat_bg_answer"
             android:padding="10dp"
-            android:textColor="@color/black" />
+            android:textColor="@color/white" />
 
     </RelativeLayout>
 

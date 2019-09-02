@@ -6,19 +6,22 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.RadioButton;
 import android.widget.TextView;
 
 import com.module.questionnaire.R;
-import com.module.questionnaire.bean.QuestionAnswerBean;
+import com.module.questionnaire.bean.RadioRecyclerViewBean;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class AddRecyclerViewAdapter extends RecyclerView.Adapter {
 
     private Context mContext;
-    private List<QuestionAnswerBean.Item> mList;
+    private List<RadioRecyclerViewBean> mList;
+    public List<AddRecyclerViewHolder> holderList = new ArrayList<>();
 
-    public AddRecyclerViewAdapter(Context context, List<QuestionAnswerBean.Item> list) {
+    public AddRecyclerViewAdapter(Context context, List<RadioRecyclerViewBean> list) {
         this.mContext = context;
         this.mList = list;
     }
@@ -27,7 +30,7 @@ public class AddRecyclerViewAdapter extends RecyclerView.Adapter {
 
     public interface ItemClickListener {
 
-        void onItemClick(String value);
+        void onItemClick(boolean isChecked, int position);
     }
 
     public void setOnItemListener(ItemClickListener itemListener) {
@@ -44,10 +47,18 @@ public class AddRecyclerViewAdapter extends RecyclerView.Adapter {
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, int position) {
         AddRecyclerViewHolder holder = (AddRecyclerViewHolder) viewHolder;
+        holderList.add(holder);
         holder.textView.setText(mList.get(position).getValue());
+        holder.radioButton.setChecked(mList.get(position).isSelect());
+        holder.radioButton.setClickable(false);
         holder.itemView.setOnClickListener(v -> {
             if (mOnItemClickListener != null) {
-                mOnItemClickListener.onItemClick(mList.get(position).getValue());
+                if (!holder.radioButton.isChecked()) {
+                    holder.radioButton.setChecked(true);
+                } else {
+                    holder.radioButton.setChecked(false);
+                }
+                mOnItemClickListener.onItemClick(holder.radioButton.isChecked(), position);
             }
         });
     }
@@ -57,12 +68,24 @@ public class AddRecyclerViewAdapter extends RecyclerView.Adapter {
         return mList.size();
     }
 
+    public int selectionItem() {
+        int position = 0;
+        for (int i = 0; i < holderList.size(); i++) {
+            if (holderList.get(i).radioButton.isChecked()) {
+                position = i;
+            }
+        }
+        return position;
+    }
+
     private class AddRecyclerViewHolder extends RecyclerView.ViewHolder {
 
+        private RadioButton radioButton;
         private TextView textView;
 
         public AddRecyclerViewHolder(View itemView) {
             super(itemView);
+            radioButton = itemView.findViewById(R.id.item_main_recycler_view_rb);
             textView = itemView.findViewById(R.id.item_main_recycler_view_value_tv);
         }
     }

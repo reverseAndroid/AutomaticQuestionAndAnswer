@@ -13,6 +13,7 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationManager;
+import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Build;
@@ -68,6 +69,7 @@ import com.module.questionnaire.adapter.MultipleSelectionViewAdapter;
 import com.module.questionnaire.bean.ContactBean;
 import com.module.questionnaire.bean.MultipleSelectionBean;
 import com.module.questionnaire.bean.QuestionAnswerBean;
+import com.module.questionnaire.bean.RadioRecyclerViewBean;
 import com.module.questionnaire.bean.RegionalChoiceBean;
 import com.module.questionnaire.bean.response.AnswerResponse;
 import com.module.questionnaire.bean.response.QuestionResponse;
@@ -79,7 +81,6 @@ import com.module.questionnaire.utils.StringBitmapUtil;
 import com.module.questionnaire.utils.http.ApiRetrofit;
 import com.module.questionnaire.utils.http.Constant;
 import com.module.questionnaire.utils.http.NewApiRetrofit;
-import com.module.questionnaire.utils.http.StringRetrofit;
 import com.module.questionnaire.widget.VoiceView;
 import com.zhihu.matisse.Matisse;
 import com.zhihu.matisse.MimeType;
@@ -216,7 +217,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mRecyclerView = findViewById(R.id.main_conversation_rv);
         mLinearLayout = findViewById(R.id.main_answer_option_ll);
 
-        Glide.with(this).load(R.mipmap.ic_launcher).apply(new RequestOptions().circleCrop()).into(mImageCustomerServiceAvatar);
+        Glide.with(this).load(R.drawable.icon_main_customer_service_avatar).apply(new RequestOptions().circleCrop().placeholder(R.mipmap.ic_launcher)).into(mImageCustomerServiceAvatar);
         mRatingBar.setRating(4);
 
         LinearLayoutManager layoutManager = new LinearLayoutManager(this) {
@@ -394,6 +395,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         ImageView imageView = view.findViewById(R.id.main_edit_view_determine_iv);
         EditText editText = view.findViewById(R.id.main_edit_view_input_et);
         editText.setHint(mQuestionResponse.getData().get(mIndex).getLabel());
+        editText.setOnFocusChangeListener((view1, b) -> {
+            if (b) {
+                imageView.setImageResource(R.drawable.icon_edit_send);
+            } else {
+                imageView.setImageResource(R.drawable.icon_edit_unsend);
+            }
+        });
+
         imageView.setOnClickListener(view1 -> {
             if (!TextUtils.isEmpty(editText.getText())) {
                 QuestionAnswerBean bean = new QuestionAnswerBean();
@@ -409,14 +418,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
 
         mLinearLayout.addView(view);
-
-//        QuestionAnswerBean bean = new QuestionAnswerBean();
-//        bean.setType(getAnswerType(0));
-//        bean.setLabel("测试");
-//        mList.add(bean);
-//        mMainAdapter.notifyItemInserted(mList.size());
-//        mLinearLayout.removeAllViews();
-//        mLinearLayout.setVisibility(View.GONE);
     }
 
     //动态添加单选的RecyclerView
@@ -424,24 +425,36 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mLinearLayout.setVisibility(View.VISIBLE);
         View view = LayoutInflater.from(this).inflate(R.layout.main_recycler_view, null);
         RecyclerView recyclerView = view.findViewById(R.id.main_recycler_view_rv);
+        TextView textConfirm = view.findViewById(R.id.main_recycler_view_confirm_tv);
         LinearLayoutManager layoutManagerInfo = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManagerInfo);
         layoutManagerInfo.setOrientation(OrientationHelper.VERTICAL);
 
-        List<QuestionAnswerBean.Item> itemList = new ArrayList<>();
+        List<RadioRecyclerViewBean> list = new ArrayList<>();
         for (int i = 0; i < mAnswerResponse.getData().get(id).size(); i++) {
-            QuestionAnswerBean.Item item = new QuestionAnswerBean.Item();
-            item.setId(mAnswerResponse.getData().get(id).get(i).getId());
-            item.setValue(mAnswerResponse.getData().get(id).get(i).getLabel());
-            itemList.add(item);
+            RadioRecyclerViewBean bean = new RadioRecyclerViewBean();
+            bean.setId(mAnswerResponse.getData().get(id).get(i).getId());
+            bean.setValue(mAnswerResponse.getData().get(id).get(i).getLabel());
+            bean.setSelect(false);
+            list.add(bean);
         }
 
-        AddRecyclerViewAdapter adapter = new AddRecyclerViewAdapter(this, itemList);
+        AddRecyclerViewAdapter adapter = new AddRecyclerViewAdapter(this, list);
         recyclerView.setAdapter(adapter);
-        adapter.setOnItemListener(value -> {
+        adapter.setOnItemListener((isChecked, position) -> {
+            for (int i = 0; i < list.size(); i++) {
+                list.get(i).setSelect(false);
+            }
+
+            list.get(position).setSelect(isChecked);
+            adapter.holderList.clear();
+            adapter.notifyDataSetChanged();
+        });
+
+        textConfirm.setOnClickListener(view1 -> {
             QuestionAnswerBean bean = new QuestionAnswerBean();
             bean.setType(getAnswerType(0));
-            bean.setLabel(value);
+            bean.setLabel(list.get(adapter.selectionItem()).getValue());
             mList.add(bean);
             mMainAdapter.notifyItemInserted(mList.size());
             mLinearLayout.removeAllViews();
@@ -449,14 +462,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
 
         mLinearLayout.addView(view);
-
-//        QuestionAnswerBean bean = new QuestionAnswerBean();
-//        bean.setType(getAnswerType(0));
-//        bean.setLabel("测试");
-//        mList.add(bean);
-//        mMainAdapter.notifyItemInserted(mList.size());
-//        mLinearLayout.removeAllViews();
-//        mLinearLayout.setVisibility(View.GONE);
     }
 
     //动态添加单选的RadioView
@@ -725,8 +730,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         window.setAttributes(layoutParams);
         dialog.show();
 
-        FrameLayout frameCancel = contentView.findViewById(R.id.dialog_voice_handle_cancel_fl);
+        FrameLayout framePlayer = contentView.findViewById(R.id.dialog_voice_handle_player_fl);
         FrameLayout frameSend = contentView.findViewById(R.id.dialog_voice_handle_send_fl);
+        FrameLayout frameCancel = contentView.findViewById(R.id.dialog_voice_handle_cancel_fl);
+
+        framePlayer.setOnClickListener(view -> {
+            MediaPlayer mediaPlayer = new MediaPlayer();
+            try {
+                mediaPlayer.setDataSource(file.getAbsolutePath());
+                mediaPlayer.prepare();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            if (!mediaPlayer.isPlaying()) {
+                framePlayer.setBackgroundResource(R.drawable.icon_voice_stop);
+                mediaPlayer.start();
+            } else {
+                framePlayer.setBackgroundResource(R.drawable.icon_voice_player);
+                mediaPlayer.reset();
+                mediaPlayer.stop();
+            }
+        });
 
         frameCancel.setOnClickListener(view -> {
             file.delete();

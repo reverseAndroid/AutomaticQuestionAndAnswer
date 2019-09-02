@@ -16,20 +16,32 @@
             android:gravity="center">
 
             <FrameLayout
-                android:id="@+id/dialog_voice_handle_cancel_fl"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
+                android:id="@+id/dialog_voice_handle_player_fl"
+                android:layout_width="65dp"
+                android:layout_height="65dp"
+                android:background="@drawable/icon_voice_player" />
 
-                <ImageView
-                    android:layout_width="65dp"
-                    android:layout_height="65dp"
-                    android:background="@mipmap/ic_launcher" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center">
+
+            <FrameLayout
+                android:id="@+id/dialog_voice_handle_send_fl"
+                android:layout_width="65dp"
+                android:layout_height="65dp"
+                android:background="@drawable/icon_voice_send_bg">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:text="取消" />
+                    android:text="发送"
+                    android:textColor="@color/white"
+                    android:textSize="16dp" />
 
             </FrameLayout>
 
@@ -42,22 +54,10 @@
             android:gravity="center">
 
             <FrameLayout
-                android:id="@+id/dialog_voice_handle_send_fl"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
-
-                <ImageView
-                    android:layout_width="65dp"
-                    android:layout_height="65dp"
-                    android:background="@mipmap/ic_launcher" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:text="发送" />
-
-            </FrameLayout>
+                android:id="@+id/dialog_voice_handle_cancel_fl"
+                android:layout_width="65dp"
+                android:layout_height="65dp"
+                android:background="@drawable/icon_voice_delete" />
 
         </RelativeLayout>
 

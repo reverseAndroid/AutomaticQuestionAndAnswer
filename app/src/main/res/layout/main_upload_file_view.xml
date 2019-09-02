@@ -16,7 +16,7 @@
         <ImageView
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:background="@mipmap/ic_launcher_round" />
+            android:background="@drawable/icon_file" />
 
         <TextView
             android:layout_width="wrap_content"

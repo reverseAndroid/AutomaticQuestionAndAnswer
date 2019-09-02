@@ -38,7 +38,7 @@
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:layout_centerInParent="true"
-            android:background="@mipmap/ic_launcher_round" />
+            android:background="@drawable/icon_voice" />
 
     </RelativeLayout>
 

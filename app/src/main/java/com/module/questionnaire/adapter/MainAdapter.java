@@ -119,10 +119,10 @@ public class MainAdapter extends RecyclerView.Adapter {
             holder.mLoadingView.setVisibility(View.GONE);
 
             if (position == 0) {
-                Glide.with(mContext).load(R.mipmap.ic_launcher).apply(new RequestOptions().circleCrop()).into(holder.imageView);
+                Glide.with(mContext).load(R.drawable.icon_defautl_custom_service_avatar).apply(new RequestOptions().circleCrop().placeholder(R.mipmap.ic_launcher)).into(holder.imageView);
             } else {
                 if (!mList.get(position - 1).getType().contains("问题")) {
-                    Glide.with(mContext).load(R.mipmap.ic_launcher).apply(new RequestOptions().circleCrop()).into(holder.imageView);
+                    Glide.with(mContext).load(R.drawable.icon_defautl_custom_service_avatar).apply(new RequestOptions().circleCrop().placeholder(R.mipmap.ic_launcher)).into(holder.imageView);
                 }
             }
 
@@ -141,10 +141,10 @@ public class MainAdapter extends RecyclerView.Adapter {
             }
 
             if (position == 0) {
-                Glide.with(mContext).load(R.mipmap.ic_launcher).apply(new RequestOptions().circleCrop()).into(holder.imageAvatar);
+                Glide.with(mContext).load(R.drawable.icon_defautl_custom_service_avatar).apply(new RequestOptions().circleCrop().placeholder(R.mipmap.ic_launcher)).into(holder.imageAvatar);
             } else {
                 if (!mList.get(position - 1).getType().contains("问题")) {
-                    Glide.with(mContext).load(R.mipmap.ic_launcher).apply(new RequestOptions().circleCrop()).into(holder.imageAvatar);
+                    Glide.with(mContext).load(R.drawable.icon_defautl_custom_service_avatar).apply(new RequestOptions().circleCrop().placeholder(R.mipmap.ic_launcher)).into(holder.imageAvatar);
                 }
             }
 
@@ -203,7 +203,7 @@ public class MainAdapter extends RecyclerView.Adapter {
 
     private void bindAnswerHolder1(RecyclerView.ViewHolder viewHolder, int position) {
         AnswerHolder1 holder = (AnswerHolder1) viewHolder;
-        Glide.with(mContext).load(R.mipmap.ic_launcher).apply(new RequestOptions().circleCrop()).into(holder.imageView);
+        Glide.with(mContext).load(R.drawable.icon_default_user_avatar).apply(new RequestOptions().circleCrop().placeholder(R.mipmap.ic_launcher)).into(holder.imageView);
         holder.textView.setText(mList.get(position).getLabel());
         if (mItemUpdateListener != null) {
             Handler handler = new Handler(Looper.getMainLooper());
@@ -213,7 +213,7 @@ public class MainAdapter extends RecyclerView.Adapter {
 
     private void bindAnswerHolder2(RecyclerView.ViewHolder viewHolder, int position) {
         AnswerHolder2 holder = (AnswerHolder2) viewHolder;
-        Glide.with(mContext).load(R.mipmap.ic_launcher).apply(new RequestOptions().circleCrop()).into(holder.imageView);
+        Glide.with(mContext).load(R.drawable.icon_default_user_avatar).apply(new RequestOptions().circleCrop().placeholder(R.mipmap.ic_launcher)).into(holder.imageView);
         Glide.with(mContext).load(StringBitmapUtil.StringToBitMap(mList.get(position).getLabel())).apply(new RequestOptions().error(R.mipmap.ic_launcher)).into(holder.imagePhoto);
         if (mList.get(position).getId() == 19) {
             Toast.makeText(mContext, mList.get(position).getLabel(), Toast.LENGTH_SHORT).show();
@@ -226,7 +226,7 @@ public class MainAdapter extends RecyclerView.Adapter {
 
     private void bindAnswerHolder3(RecyclerView.ViewHolder viewHolder, int position) {
         AnswerHolder3 holder = (AnswerHolder3) viewHolder;
-        Glide.with(mContext).load(R.mipmap.ic_launcher).apply(new RequestOptions().circleCrop()).into(holder.imageAvatar);
+        Glide.with(mContext).load(R.drawable.icon_default_user_avatar).apply(new RequestOptions().circleCrop().placeholder(R.mipmap.ic_launcher)).into(holder.imageAvatar);
 
         final boolean[] isInit = {false};
         MediaPlayer mediaPlayer = new MediaPlayer();

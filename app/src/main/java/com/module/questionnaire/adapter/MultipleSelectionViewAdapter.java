@@ -47,9 +47,9 @@ public class MultipleSelectionViewAdapter extends RecyclerView.Adapter<MultipleS
         ViewHolder holder = viewHolder;
         holder.textView.setText(mList.get(i).getTitle());
         if (mList.get(i).isSelect()) {
-            holder.imageView.setBackgroundResource(R.mipmap.icon_selection);
+            holder.imageView.setBackgroundResource(R.drawable.icon_multiple_selection);
         } else {
-            holder.imageView.setBackgroundResource(0);
+            holder.imageView.setBackgroundResource(R.drawable.icon_multiple_unselection);
         }
 
         holder.itemView.setOnClickListener(view -> {

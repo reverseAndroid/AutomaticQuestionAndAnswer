@@ -17,7 +17,7 @@
         <ImageView
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:background="@mipmap/ic_launcher_round" />
+            android:background="@drawable/icon_album" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -38,7 +38,7 @@
         <ImageView
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:background="@mipmap/ic_launcher_round" />
+            android:background="@drawable/icon_camera" />
 
         <TextView
             android:layout_width="wrap_content"
