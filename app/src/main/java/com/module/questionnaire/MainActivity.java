@@ -83,6 +83,7 @@ import com.module.questionnaire.utils.StringBitmapUtil;
 import com.module.questionnaire.utils.http.ApiRetrofit;
 import com.module.questionnaire.utils.http.Constant;
 import com.module.questionnaire.utils.http.NewApiRetrofit;
+import com.module.questionnaire.utils.http.StringRetrofit;
 import com.module.questionnaire.widget.VoiceView;
 import com.zhihu.matisse.Matisse;
 import com.zhihu.matisse.MimeType;
@@ -107,7 +108,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private Toolbar mToolbar;
     private TextView mTextTitle;
-    private TextView mTextRefresh;
+    private ImageView mImageRefresh;
     private NestedScrollView mNestedScrollView;
     private ImageView mImageCustomerServiceAvatar;
     private TextView mTextCustomerServiceName;
@@ -216,8 +217,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mToolbar = findViewById(R.id.layout_title_tb);
         mToolbar.setNavigationOnClickListener(v -> finish());
         mTextTitle = findViewById(R.id.layout_title_title_tv);
-        mTextRefresh = findViewById(R.id.layout_title_right_tv);
-        mTextRefresh.setOnClickListener(this);
+        mImageRefresh = findViewById(R.id.layout_title_right_iv);
+        mImageRefresh.setOnClickListener(this);
     }
 
     private void initView() {
@@ -326,7 +327,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View v) {
         int id = v.getId();
-        if (id == R.id.layout_title_right_tv) {
+        if (id == R.id.layout_title_right_iv) {
             Toast.makeText(this, "刷新", Toast.LENGTH_SHORT).show();
         }
     }
@@ -349,17 +350,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         addRadioView(id);
                     }
                 } else {
-                    QuestionAnswerBean bean = new QuestionAnswerBean();
-                    bean.setType(getAnswerType(0));
-                    bean.setLabel("测试");
-                    mList.add(bean);
-                    mMainAdapter.notifyItemInserted(mList.size());
-                    mLinearLayout.removeAllViews();
-                    mLinearLayout.setVisibility(View.GONE);
+                    updateMainAdapter(null, getAnswerType(0), "测试");
                 }
                 break;
             case 2:
-                addMultipleSelectionView();
+                addMultipleSelectionView(id);
                 break;
             case 3:
                 addUploadPhotoView();
@@ -387,12 +382,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case 11:
                 //返回11，直接往下继续走，由于上一步没有让mIndex自增，这里的mIndex还是上一步的，所以需要加个1
-                QuestionAnswerBean bean = new QuestionAnswerBean();
-                bean.setId(mQuestionResponse.getData().get(mIndex + 1).getId());
-                bean.setType(getQuestionType(mQuestionResponse.getData().get(mIndex + 1).getType()));
-                bean.setLabel(mQuestionResponse.getData().get(mIndex + 1).getLabel());
-                mList.add(bean);
-                mMainAdapter.notifyItemInserted(mList.size());
+                updateMainAdapter(mQuestionResponse.getData().get(mIndex + 1).getId(), getQuestionType(mQuestionResponse.getData().get(mIndex + 1).getType()), mQuestionResponse.getData().get(mIndex + 1).getLabel());
                 break;
             case 12:
                 addAudioVoiceView();
@@ -401,6 +391,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 addFormView();
                 break;
             case 14:
+
                 break;
             case 15:
                 startLoanContractTask(mQuestionResponse.getData().get(mIndex));
@@ -416,12 +407,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     @Override
     public void onAnswerInteraction() {
-        QuestionAnswerBean bean = new QuestionAnswerBean();
-        bean.setId(mQuestionResponse.getData().get(mIndex).getId());
-        bean.setType(getQuestionType(mQuestionResponse.getData().get(mIndex).getType()));
-        bean.setLabel(mQuestionResponse.getData().get(mIndex).getLabel());
-        mList.add(bean);
-        mMainAdapter.notifyItemInserted(mList.size());
+        updateMainAdapter(mQuestionResponse.getData().get(mIndex).getId(), getQuestionType(mQuestionResponse.getData().get(mIndex).getType()), mQuestionResponse.getData().get(mIndex).getLabel());
         updateNestScrollView(false);
     }
 
@@ -442,13 +428,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         imageView.setOnClickListener(view1 -> {
             if (!TextUtils.isEmpty(editText.getText())) {
-                QuestionAnswerBean bean = new QuestionAnswerBean();
-                bean.setType(getAnswerType(0));
-                bean.setLabel(editText.getText().toString());
-                mList.add(bean);
-                mMainAdapter.notifyItemInserted(mList.size());
-                mLinearLayout.removeAllViews();
-                mLinearLayout.setVisibility(View.GONE);
+                updateMainAdapter(null, getAnswerType(0), editText.getText().toString());
             } else {
                 Toast.makeText(MainActivity.this, "不能为空", Toast.LENGTH_SHORT).show();
             }
@@ -489,13 +469,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
 
         textConfirm.setOnClickListener(view1 -> {
-            QuestionAnswerBean bean = new QuestionAnswerBean();
-            bean.setType(getAnswerType(0));
-            bean.setLabel(list.get(adapter.selectionItem()).getValue());
-            mList.add(bean);
-            mMainAdapter.notifyItemInserted(mList.size());
-            mLinearLayout.removeAllViews();
-            mLinearLayout.setVisibility(View.GONE);
+            updateMainAdapter(null, getAnswerType(0), list.get(adapter.selectionItem()).getValue());
         });
 
         mLinearLayout.addView(view);
@@ -508,39 +482,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         TextView textLeft = view.findViewById(R.id.main_radio_view_left_tv);
         textLeft.setText(mAnswerResponse.getData().get(id).get(0).getLabel());
         textLeft.setOnClickListener(view1 -> {
-            QuestionAnswerBean bean = new QuestionAnswerBean();
-            bean.setType(getAnswerType(0));
-            bean.setLabel(textLeft.getText().toString());
-            mList.add(bean);
-            mMainAdapter.notifyItemInserted(mList.size());
-            mLinearLayout.removeAllViews();
-            mLinearLayout.setVisibility(View.GONE);
+            updateMainAdapter(null, getAnswerType(0), textLeft.getText().toString());
         });
 
         TextView textRight = view.findViewById(R.id.main_radio_view_right_tv);
         textRight.setText(mAnswerResponse.getData().get(id).get(1).getLabel());
         textRight.setOnClickListener(view12 -> {
-            QuestionAnswerBean bean = new QuestionAnswerBean();
-            bean.setType(getAnswerType(0));
-            bean.setLabel(textRight.getText().toString());
-            mList.add(bean);
-            mMainAdapter.notifyItemInserted(mList.size());
-            mLinearLayout.removeAllViews();
-            mLinearLayout.setVisibility(View.GONE);
+            updateMainAdapter(null, getAnswerType(0), textRight.getText().toString());
         });
         mLinearLayout.addView(view);
-
-//        QuestionAnswerBean bean = new QuestionAnswerBean();
-//        bean.setType(getAnswerType(0));
-//        bean.setLabel("测试");
-//        mList.add(bean);
-//        mMainAdapter.notifyItemInserted(mList.size());
-//        mLinearLayout.removeAllViews();
-//        mLinearLayout.setVisibility(View.GONE);
     }
 
     //动态添加多选的MultipleSelectionView
-    private void addMultipleSelectionView() {
+    private void addMultipleSelectionView(String id) {
         mLinearLayout.setVisibility(View.VISIBLE);
         View view = LayoutInflater.from(this).inflate(R.layout.main_multiple_selection_view, null);
         RecyclerView recyclerView = view.findViewById(R.id.main_multiple_selection_rv);
@@ -550,9 +504,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         recyclerView.setLayoutManager(layoutManager);
 
         List<MultipleSelectionBean> list = new ArrayList<>();
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < mAnswerResponse.getData().get(id).size(); i++) {
             MultipleSelectionBean bean = new MultipleSelectionBean();
-            bean.setTitle("多选项" + i);
+            bean.setId(mAnswerResponse.getData().get(id).get(i).getId());
+            bean.setTitle(mAnswerResponse.getData().get(id).get(i).getLabel());
             bean.setSelect(false);
             list.add(bean);
         }
@@ -565,9 +520,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
 
         textView.setOnClickListener(view1 -> {
-            QuestionAnswerBean bean = new QuestionAnswerBean();
-            bean.setType(getAnswerType(0));
-
             List<String> dataList = new ArrayList<>();
             for (int i = 0; i < list.size(); i++) {
                 if (list.get(i).isSelect()) {
@@ -575,11 +527,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             }
 
-            bean.setLabel(new Gson().toJson(dataList));
-            mList.add(bean);
-            mMainAdapter.notifyItemInserted(mList.size());
-            mLinearLayout.removeAllViews();
-            mLinearLayout.setVisibility(View.GONE);
+            updateMainAdapter(null, getAnswerType(0), new Gson().toJson(dataList));
         });
 
         mLinearLayout.addView(view);
@@ -797,13 +745,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         frameSend.setOnClickListener(view -> {
             dialog.dismiss();
-            QuestionAnswerBean bean = new QuestionAnswerBean();
-            bean.setType(getAnswerType(2));
-            bean.setLabel(file.getAbsolutePath());
-            mList.add(bean);
-            mMainAdapter.notifyItemInserted(mList.size());
-            mLinearLayout.removeAllViews();
-            mLinearLayout.setVisibility(View.GONE);
+            updateMainAdapter(null, getAnswerType(2), file.getAbsolutePath());
         });
     }
 
@@ -850,13 +792,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         buttonClear.setOnClickListener(view1 -> signaturePad.clear());
         buttonSubmit.setOnClickListener(view1 -> {
             Bitmap signatureBitmap = signaturePad.getSignatureBitmap();
-            QuestionAnswerBean bean = new QuestionAnswerBean();
-            bean.setType(getAnswerType(1));
-            bean.setLabel(StringBitmapUtil.BitMapToString(signatureBitmap));
-            mList.add(bean);
-            mMainAdapter.notifyItemInserted(mList.size());
-            mLinearLayout.removeAllViews();
-            mLinearLayout.setVisibility(View.GONE);
+            updateMainAdapter(null, getAnswerType(1), StringBitmapUtil.BitMapToString(signatureBitmap));
         });
 
         mLinearLayout.addView(view);
@@ -885,13 +821,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             }
 
-            QuestionAnswerBean bean = new QuestionAnswerBean();
-            bean.setType(getAnswerType(0));
-            bean.setLabel("已经上传通讯录");
-            mList.add(bean);
-            mMainAdapter.notifyItemInserted(mList.size());
-            mLinearLayout.removeAllViews();
-            mLinearLayout.setVisibility(View.GONE);
+            updateMainAdapter(null, getAnswerType(0), "已经上传通讯录");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -913,13 +843,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Location location = locationManager.getLastKnownLocation(provider);
                 setLatitudeLongitudeToLocation(location);
                 if (counter == providers.size() && location == null) {
-                    QuestionAnswerBean bean = new QuestionAnswerBean();
-                    bean.setType(getAnswerType(0));
-                    bean.setLabel("获取不到您的定位，请检查网络或者GPS是否开启");
-                    mList.add(bean);
-                    mMainAdapter.notifyItemInserted(mList.size());
-                    mLinearLayout.removeAllViews();
-                    mLinearLayout.setVisibility(View.GONE);
+                    updateMainAdapter(null, getAnswerType(0), "获取不到您的定位，请检查网络或者GPS是否开启");
                 }
             }
         }
@@ -931,13 +855,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             double latitude = location.getLatitude();
             double longitude = location.getLongitude();
             String position = GetAddressUtil.getAddress(this, latitude, longitude);
-            QuestionAnswerBean bean = new QuestionAnswerBean();
-            bean.setType(getAnswerType(0));
-            bean.setLabel(position);
-            mList.add(bean);
-            mMainAdapter.notifyItemInserted(mList.size());
-            mLinearLayout.removeAllViews();
-            mLinearLayout.setVisibility(View.GONE);
+            updateMainAdapter(null, getAnswerType(0), position);
             mIsLocation = true;
         }
     }
@@ -1001,19 +919,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 viewSecond.setVisibility(View.INVISIBLE);
 
                 if (mCurrentShowList.size() == 0) {
-                    QuestionAnswerBean bean = new QuestionAnswerBean();
-                    bean.setType(getAnswerType(0));
-
                     StringBuilder text = new StringBuilder();
                     for (String s : list) {
                         text.append(s);
                     }
 
-                    bean.setLabel(text.toString());
-                    mList.add(bean);
-                    mMainAdapter.notifyItemInserted(mList.size());
-                    mLinearLayout.removeAllViews();
-                    mLinearLayout.setVisibility(View.GONE);
+                    updateMainAdapter(null, getAnswerType(0), text.toString());
                 } else {
                     textThird.setText("选择分区");
                     textThird.setTextColor(getResources().getColor(R.color.black));
@@ -1021,19 +932,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     viewThird.setVisibility(View.VISIBLE);
                 }
             } else if (list.size() == 3) {
-                QuestionAnswerBean bean = new QuestionAnswerBean();
-                bean.setType(getAnswerType(0));
-
                 StringBuilder text = new StringBuilder();
                 for (String s : list) {
                     text.append(s);
                 }
 
-                bean.setLabel(text.toString());
-                mList.add(bean);
-                mMainAdapter.notifyItemInserted(mList.size());
-                mLinearLayout.removeAllViews();
-                mLinearLayout.setVisibility(View.GONE);
+                updateMainAdapter(null, getAnswerType(0), text.toString());
             }
 
             adapter.notifyDataSetChanged();
@@ -1065,13 +969,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Toast.makeText(this, "请填写完整", Toast.LENGTH_SHORT).show();
                 return;
             }
-            QuestionAnswerBean bean = new QuestionAnswerBean();
-            bean.setType(getAnswerType(0));
-            bean.setLabel(adapter.getAllEditText());
-            mList.add(bean);
-            mMainAdapter.notifyItemInserted(mList.size());
-            mLinearLayout.removeAllViews();
-            mLinearLayout.setVisibility(View.GONE);
+
+            updateMainAdapter(null, getAnswerType(0), adapter.getAllEditText());
         });
 
         mLinearLayout.addView(view);
@@ -1106,12 +1005,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(baseResponse -> {
                     if (baseResponse.isSuccess()) {
-                        QuestionAnswerBean bean = new QuestionAnswerBean();
-                        bean.setType(getQuestionType(dataBean.getType()));
-                        bean.setLabel(baseResponse.getData());
-                        bean.setContinuous(true);
-                        mList.add(bean);
-                        mMainAdapter.notifyItemInserted(mList.size());
+                        updateMainAdapter(null, getQuestionType(dataBean.getType()), baseResponse.getData());
                     }
                 }, throwable -> LogUtils.e(throwable.getMessage()));
     }
@@ -1151,13 +1045,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         TimePickerView timePickerView = new TimePickerBuilder(this, (date, v) -> {
             SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
             String time = format.format(date);
-            QuestionAnswerBean bean = new QuestionAnswerBean();
-            bean.setType(getAnswerType(0));
-            bean.setLabel(time);
-            mList.add(bean);
-            mMainAdapter.notifyItemInserted(mList.size());
-            mLinearLayout.removeAllViews();
-            mLinearLayout.setVisibility(View.GONE);
+            updateMainAdapter(null, getAnswerType(0), time);
         }).setTimeSelectChangeListener(date -> Log.i("pvTime", "onTimeSelectChanged"))
                 .setType(new boolean[]{true, true, true, false, false, false})
                 .isDialog(true) //默认设置false ，内部实现将DecorView 作为它的父控件。
@@ -1264,13 +1152,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Toast.makeText(this, "您可以进行拍照了", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(this, "您将不能进行拍照", Toast.LENGTH_SHORT).show();
-                    QuestionAnswerBean bean = new QuestionAnswerBean();
-                    bean.setType(getAnswerType(0));
-                    bean.setLabel("您将不能进行拍照");
-                    mList.add(bean);
-                    mMainAdapter.notifyItemInserted(mList.size());
-                    mLinearLayout.removeAllViews();
-                    mLinearLayout.setVisibility(View.GONE);
+                    updateMainAdapter(null, getAnswerType(0), "您将不能进行拍照");
                 }
                 break;
             case RECORD_AUDIO:
@@ -1278,13 +1160,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Toast.makeText(this, "您可以开始发送语音了", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(this, "您将不能发送语音", Toast.LENGTH_SHORT).show();
-//                    QuestionAnswerBean bean = new QuestionAnswerBean();
-//                    bean.setType(getAnswerType(0));
-//                    bean.setLabel("您将不能发送语音");
-//                    mList.add(bean);
-//                    mMainAdapter.notifyItemInserted(mList.size());
-//                    mLinearLayout.removeAllViews();
-//                    mLinearLayout.setVisibility(View.GONE);
                 }
                 break;
             case GPS:
@@ -1294,13 +1169,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     uploadPosition();
                 } else {
                     Toast.makeText(this, "您将不能获取定位", Toast.LENGTH_SHORT).show();
-                    QuestionAnswerBean bean = new QuestionAnswerBean();
-                    bean.setType(getAnswerType(0));
-                    bean.setLabel("您没有同意上报位置");
-                    mList.add(bean);
-                    mMainAdapter.notifyItemInserted(mList.size());
-                    mLinearLayout.removeAllViews();
-                    mLinearLayout.setVisibility(View.GONE);
+                    updateMainAdapter(null, getAnswerType(0), "您没有同意上报位置");
                 }
                 break;
             case READ_CONTACTS:
@@ -1309,13 +1178,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     uploadContact();
                 } else {
                     Toast.makeText(this, "您将不能获取通讯录", Toast.LENGTH_SHORT).show();
-                    QuestionAnswerBean bean = new QuestionAnswerBean();
-                    bean.setType(getAnswerType(0));
-                    bean.setLabel("您没有同意获取通讯录");
-                    mList.add(bean);
-                    mMainAdapter.notifyItemInserted(mList.size());
-                    mLinearLayout.removeAllViews();
-                    mLinearLayout.setVisibility(View.GONE);
+                    updateMainAdapter(null, getAnswerType(0), "您没有同意获取通讯录");
                 }
                 break;
             case SELECTION_CONTACT:
@@ -1329,6 +1192,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             default:
                 break;
         }
+    }
+
+    private void updateMainAdapter(Integer id, String type, String label) {
+        QuestionAnswerBean bean = new QuestionAnswerBean();
+        bean.setId(id);
+        bean.setType(type);
+        bean.setLabel(label);
+        mList.add(bean);
+        mMainAdapter.notifyItemInserted(mList.size());
+        mLinearLayout.removeAllViews();
+        mLinearLayout.setVisibility(View.GONE);
     }
 
     //返回问题类型
@@ -1346,6 +1220,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case 9:
             case 10:
             case 11:
+            case 14:
             case 15:
                 typeText = "文本问题";
                 break;

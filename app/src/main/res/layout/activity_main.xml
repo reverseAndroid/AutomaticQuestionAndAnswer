@@ -21,7 +21,7 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="@color/white"
-            app:navigationIcon="@mipmap/icon_back_black">
+            app:navigationIcon="@drawable/icon_back">
 
             <TextView
                 android:id="@+id/layout_title_title_tv"
@@ -32,16 +32,14 @@
                 android:textColor="@color/black"
                 android:textSize="15dp" />
 
-            <TextView
-                android:id="@+id/layout_title_right_tv"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+            <ImageView
+                android:id="@+id/layout_title_right_iv"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
                 android:layout_gravity="end"
                 android:layout_marginEnd="15dp"
-                android:padding="10dp"
-                android:text="刷新"
-                android:textColor="@color/black"
-                android:textSize="12dp" />
+                android:background="@drawable/icon_refresh"
+                android:padding="10dp" />
 
         </android.support.v7.widget.Toolbar>
 

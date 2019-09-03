@@ -47,7 +47,6 @@ public class GetAddressUtil {
             }
         } catch (IOException e) {
             // TODO Auto-generated catch block
-            Toast.makeText(context, "报错", Toast.LENGTH_LONG).show();
             e.printStackTrace();
         }
         return stringBuilder.toString();

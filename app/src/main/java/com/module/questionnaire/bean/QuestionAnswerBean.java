@@ -4,18 +4,18 @@ import java.util.List;
 
 public class QuestionAnswerBean {
 
-    private int id;
+    private Integer id;
     private String type;
     private String label;
     //是否是连续问题
     private boolean isContinuous;
     private List<Item> items;
 
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
