@@ -68,7 +68,7 @@ public class BaseApiRetrofit {
                 .newBuilder()
                 .header("appid", "com.loans.lion")
                 .header("Content-Type", "application/json")
-                .header("access_token", SPUtils.getInstance().getString(Constant.TOKEN))
+//                .header("access_token", SPUtils.getInstance().getString(Constant.TOKEN))
 //                .addHeader("Accept-Encoding", "gzip, deflate")
 //                .addHeader("Connection", "keep-alive")
 //                .addHeader("Accept", "*/*")

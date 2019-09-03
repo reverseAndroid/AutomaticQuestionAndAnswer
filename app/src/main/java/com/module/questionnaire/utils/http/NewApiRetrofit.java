@@ -5,10 +5,12 @@ import com.google.gson.GsonBuilder;
 import com.module.questionnaire.bean.response.AnswerResponse;
 import com.module.questionnaire.bean.response.BaseResponse;
 import com.module.questionnaire.bean.response.BootPlanResponse;
+import com.module.questionnaire.bean.response.DecisionMakingResponse;
 import com.module.questionnaire.bean.response.LoginResponse;
 import com.module.questionnaire.bean.response.QuestionResponse;
 import com.module.questionnaire.bean.response.RegionalChoiceResponse;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import okhttp3.MediaType;
@@ -50,19 +52,29 @@ public class NewApiRetrofit extends BaseApiRetrofit {
     }
 
     @Multipart
-    private RequestBody getRequestBody(Object obj) {
+    private RequestBody getJsonRequestBody(Object obj) {
         String route = new Gson().toJson(obj);
         RequestBody body = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), route);
         return body;
     }
 
+    @Multipart
+    private Map<String, RequestBody> getFormRequestBody(Map<String, String> requestDataMap) {
+        Map<String, RequestBody> requestBodyMap = new HashMap<>();
+        for (String key : requestDataMap.keySet()) {
+            RequestBody requestBody = RequestBody.create(MediaType.parse("multipart/form-data"), requestDataMap.get(key) == null ? "" : requestDataMap.get(key));
+            requestBodyMap.put(key, requestBody);
+        }
+        return requestBodyMap;
+    }
+
     public Observable<LoginResponse> login(Map<String, String> params) {
-        return mApi.login(getRequestBody(params));
+        return mApi.login(getJsonRequestBody(params));
     }
 
 
     public Observable<QuestionResponse> getQuestionList(Map<String, String> params) {
-        return mApi.getQuestionList(getRequestBody(params));
+        return mApi.getQuestionList(getJsonRequestBody(params));
     }
 
     public Observable<AnswerResponse> getAnswerList() {
@@ -70,7 +82,7 @@ public class NewApiRetrofit extends BaseApiRetrofit {
     }
 
     public Observable<RegionalChoiceResponse> getRegionalChoice(Map<String, String> params) {
-        return mApi.getRegionalChoice(getRequestBody(params));
+        return mApi.getRegionalChoice(getJsonRequestBody(params));
     }
 
     public Observable<BaseResponse> getLoanContract(String url) {
@@ -78,6 +90,10 @@ public class NewApiRetrofit extends BaseApiRetrofit {
     }
 
     public Observable<BootPlanResponse> getBootPlan(Map<String, String> params) {
-        return mApi.getBootPlan(getRequestBody(params));
+        return mApi.getBootPlan(getFormRequestBody(params));
+    }
+
+    public Observable<DecisionMakingResponse> getDecisionMaking() {
+        return mApi.getDecisionMaking();
     }
 }

@@ -72,6 +72,8 @@ import com.module.questionnaire.bean.QuestionAnswerBean;
 import com.module.questionnaire.bean.RadioRecyclerViewBean;
 import com.module.questionnaire.bean.RegionalChoiceBean;
 import com.module.questionnaire.bean.response.AnswerResponse;
+import com.module.questionnaire.bean.response.BootPlanResponse;
+import com.module.questionnaire.bean.response.DecisionMakingResponse;
 import com.module.questionnaire.bean.response.QuestionResponse;
 import com.module.questionnaire.utils.GetAddressUtil;
 import com.module.questionnaire.utils.GlideEngine;
@@ -85,6 +87,10 @@ import com.module.questionnaire.widget.VoiceView;
 import com.zhihu.matisse.Matisse;
 import com.zhihu.matisse.MimeType;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -93,6 +99,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import rx.Observer;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
@@ -110,6 +117,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private LinearLayout mLinearLayout;
     private MainAdapter mMainAdapter;
 
+    //引导方案
+    private BootPlanResponse mBootPlanResponse;
+    private List<List<Integer>> mBootPlanList;
+    //多维决策
+    private DecisionMakingResponse mDecisionMakingResponse;
     //问题List
     private QuestionResponse mQuestionResponse;
     //答案List
@@ -242,6 +254,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         mQuestionResponse = questionResponse;
                         startAnswerListTask();
                         startRegionalChoiceTask();
+                    }
+                }, throwable -> LogUtils.e(throwable.getMessage()));
+
+        //获取引导方案
+        Map<String, String> params1 = new HashMap<>();
+        params1.put("access_token", SPUtils.getInstance().getString(Constant.TOKEN));
+        params1.put("type", "1");
+        NewApiRetrofit.getInstance().getBootPlan(params1)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(bootPlanResponse -> {
+                    if (bootPlanResponse.isSuccess()) {
+                        mBootPlanResponse = bootPlanResponse;
+                        mBootPlanList = new Gson().fromJson(bootPlanResponse.getData().getContent(), new TypeToken<List<List<Integer>>>() {
+                        }.getType());
+                    }
+                }, throwable -> LogUtils.e(throwable.getMessage()));
+
+        //获取多维决策
+        NewApiRetrofit.getInstance().getDecisionMaking()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(decisionMakingResponse -> {
+                    if (decisionMakingResponse.isSuccess()) {
+                        mDecisionMakingResponse = decisionMakingResponse;
                     }
                 }, throwable -> LogUtils.e(throwable.getMessage()));
     }
