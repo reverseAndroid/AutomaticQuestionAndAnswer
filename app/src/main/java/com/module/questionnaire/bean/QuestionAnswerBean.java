@@ -9,6 +9,8 @@ public class QuestionAnswerBean {
     private String label;
     //是否是连续问题
     private boolean isContinuous;
+    //是否关闭这项问题
+    private boolean isCloseQuestion;
     private List<Item> items;
 
     public Integer getId() {
@@ -41,6 +43,14 @@ public class QuestionAnswerBean {
 
     public void setContinuous(boolean continuous) {
         isContinuous = continuous;
+    }
+
+    public boolean isCloseQuestion() {
+        return isCloseQuestion;
+    }
+
+    public void setCloseQuestion(boolean closeQuestion) {
+        isCloseQuestion = closeQuestion;
     }
 
     public List<Item> getItems() {

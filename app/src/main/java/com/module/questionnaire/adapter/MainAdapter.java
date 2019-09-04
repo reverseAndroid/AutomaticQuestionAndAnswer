@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.graphics.drawable.AnimationDrawable;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
@@ -21,7 +22,6 @@ import com.bumptech.glide.request.RequestOptions;
 import com.ldoublem.loadingviewlib.view.LVCircularJump;
 import com.module.questionnaire.R;
 import com.module.questionnaire.bean.QuestionAnswerBean;
-import com.module.questionnaire.utils.StringBitmapUtil;
 
 import java.io.IOException;
 import java.util.List;
@@ -59,6 +59,7 @@ public class MainAdapter extends RecyclerView.Adapter {
         RecyclerView.ViewHolder mViewHolder = null;
         switch (viewType) {
             case 0:
+            case 5:
                 mViewHolder = new QuestionHolder1(inflater.inflate(R.layout.item_main_question, parent, false));
                 break;
             case 1:
@@ -83,6 +84,7 @@ public class MainAdapter extends RecyclerView.Adapter {
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, int position) {
         switch (getItemViewType(position)) {
             case 0:
+            case 5:
                 bindQuestionHolder1(viewHolder, position);
                 break;
             case 1:
@@ -216,7 +218,8 @@ public class MainAdapter extends RecyclerView.Adapter {
     private void bindAnswerHolder2(RecyclerView.ViewHolder viewHolder, int position) {
         AnswerHolder2 holder = (AnswerHolder2) viewHolder;
         Glide.with(mContext).load(R.drawable.icon_default_user_avatar).apply(new RequestOptions().circleCrop().placeholder(R.mipmap.ic_launcher)).into(holder.imageView);
-        Glide.with(mContext).load(StringBitmapUtil.StringToBitMap(mList.get(position).getLabel())).apply(new RequestOptions().error(R.mipmap.ic_launcher)).into(holder.imagePhoto);
+        Uri uri = Uri.parse(mList.get(position).getLabel());
+        Glide.with(mContext).load(uri).apply(new RequestOptions().error(R.mipmap.ic_launcher)).into(holder.imagePhoto);
         if (mList.get(position).getId() == 19) {
             Toast.makeText(mContext, mList.get(position).getLabel(), Toast.LENGTH_SHORT).show();
         }
@@ -305,6 +308,9 @@ public class MainAdapter extends RecyclerView.Adapter {
                 break;
             case "语音回答":
                 type = 4;
+                break;
+            case "接口问题":
+                type = 5;
                 break;
             default:
                 type = 0;
