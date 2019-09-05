@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context="com.module.questionnaire.MainActivity">
+    tools:context="com.module.questionnaire.QuestionAnswerActivity">
 
     <android.support.design.widget.AppBarLayout
         android:id="@+id/layout_title_abl"
@@ -32,14 +32,20 @@
                 android:textColor="@color/black"
                 android:textSize="15dp" />
 
-            <ImageView
-                android:id="@+id/layout_title_right_iv"
-                android:layout_width="18dp"
-                android:layout_height="18dp"
+            <FrameLayout
+                android:id="@+id/layout_title_right_fl"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
                 android:layout_gravity="end"
-                android:layout_marginEnd="15dp"
-                android:background="@drawable/icon_refresh"
-                android:padding="10dp" />
+                android:layout_marginEnd="15dp">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/icon_refresh" />
+
+            </FrameLayout>
 
         </android.support.v7.widget.Toolbar>
 

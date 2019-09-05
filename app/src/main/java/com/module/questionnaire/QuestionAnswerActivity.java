@@ -51,7 +51,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bigkoo.pickerview.builder.TimePickerBuilder;
-import com.bigkoo.pickerview.listener.OnTimeSelectListener;
 import com.bigkoo.pickerview.view.TimePickerView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
@@ -88,7 +87,6 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -96,11 +94,11 @@ import java.util.Map;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, MainAdapter.ItemUpdateListener {
+public class QuestionAnswerActivity extends AppCompatActivity implements View.OnClickListener, MainAdapter.ItemUpdateListener {
 
     private Toolbar mToolbar;
     private TextView mTextTitle;
-    private ImageView mImageRefresh;
+    private FrameLayout mFrameRefresh;
     private NestedScrollView mNestedScrollView;
     private ImageView mImageCustomerServiceAvatar;
     private TextView mTextCustomerServiceName;
@@ -166,7 +164,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_question_answer);
         StatusBarUtil.setColor(this, Color.WHITE, 0);
         //修改状态栏字体颜色变成黑色
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -212,8 +210,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mToolbar = findViewById(R.id.layout_title_tb);
         mToolbar.setNavigationOnClickListener(v -> finish());
         mTextTitle = findViewById(R.id.layout_title_title_tv);
-        mImageRefresh = findViewById(R.id.layout_title_right_iv);
-        mImageRefresh.setOnClickListener(this);
+        mFrameRefresh = findViewById(R.id.layout_title_right_fl);
+        mFrameRefresh.setOnClickListener(this);
     }
 
     private void initView() {
@@ -287,20 +285,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .subscribe(answerResponse -> {
                     if (answerResponse.isSuccess()) {
                         mAnswerResponse = answerResponse;
+                        setLoadAdapter();
 
-                        mIndex = 37;
-
-                        QuestionAnswerBean bean = new QuestionAnswerBean();
-                        bean.setId(mQuestionResponse.getData().get(mIndex).getId());
-                        bean.setType(getQuestionType(mQuestionResponse.getData().get(mIndex).getType()));
-                        bean.setLabel(mQuestionResponse.getData().get(mIndex).getLabel());
-                        mList.add(bean);
-                        mMainAdapter = new MainAdapter(this, mList);
-                        mRecyclerView.setAdapter(mMainAdapter);
-                        mMainAdapter.setItemUpdateListener(this);
-                        mRecyclerView.setVisibility(View.VISIBLE);
                     }
                 }, throwable -> LogUtils.e(throwable.getMessage()));
+    }
+
+    //加载主页adapter
+    private void setLoadAdapter() {
+        QuestionAnswerBean bean = new QuestionAnswerBean();
+        bean.setId(mQuestionResponse.getData().get(mIndex).getId());
+        bean.setType(getQuestionType(mQuestionResponse.getData().get(mIndex).getType()));
+        bean.setLabel(mQuestionResponse.getData().get(mIndex).getLabel());
+        mList.add(bean);
+        mMainAdapter = new MainAdapter(this, mList);
+        mRecyclerView.setAdapter(mMainAdapter);
+        mMainAdapter.setItemUpdateListener(this);
+        mRecyclerView.setVisibility(View.VISIBLE);
     }
 
     //获取地区数据
@@ -325,8 +326,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View v) {
         int id = v.getId();
-        if (id == R.id.layout_title_right_iv) {
-            Toast.makeText(this, "刷新", Toast.LENGTH_SHORT).show();
+        if (id == R.id.layout_title_right_fl) {
+            mLinearLayout.removeAllViews();
+            mLinearLayout.setVisibility(View.GONE);
+            mList.clear();
+            mMainAdapter.refreshAdapter();
+            mMainAdapter = null;
+            setLoadAdapter();
         }
     }
 
@@ -392,7 +398,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case 14:
                 String url = mQuestionResponse.getData().get(mIndex).getComments().toString();
-                Intent intent = new Intent(MainActivity.this, WebViewActivity.class);
+                Intent intent = new Intent(QuestionAnswerActivity.this, WebViewActivity.class);
                 intent.putExtra("url", url);
                 startActivity(intent);
                 break;
@@ -411,6 +417,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     @Override
     public void onAnswerInteraction() {
+        startReportAnswer();
+
         //这里判断当前问题状态，如果问题是启用，正常往下走，如果问题是禁用，那么mIndex就自增，然后继续判断自增后的问题是否禁用
         //由于mIndex不能超过mQuestionResponse.getData().size()，所以，加个判断，防止下标越界
         while (!getCurrentQuestionStatus()) {
@@ -432,6 +440,33 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         updateNestScrollView(false);
     }
 
+    //根据BootPlanResponse返回的数组上报答案
+    private void startReportAnswer() {
+//        boolean isNeedReportAnswer = false;
+//        for (int i = 0; i < mBootPlanList.size(); i++) {
+//            if (mBootPlanList.get(i).get(mBootPlanList.get(i).size() - 1).equals(mQuestionResponse.getData().get(mIndex).getId())) {
+//                isNeedReportAnswer = true;
+//            }
+//        }
+//
+//        if (isNeedReportAnswer) {
+//            List<>
+//            for (int i = 0; i < mList.size(); i++) {
+//                if (mList.get(i).getType().contains("回答")) {
+//
+//                }
+//            }
+//
+//            Map<String, String> params = new HashMap<>();
+//            params.put("access_token", SPUtils.getInstance().getString(Constant.TOKEN));
+//            params.put("answer", );
+//            NewApiRetrofit.getInstance().reportAnswer()
+//                    .subscribeOn(Schedulers.io())
+//                    .observeOn(AndroidSchedulers.mainThread())
+//                    .subscribe();
+//        }
+    }
+
     //获取当前问题的策略(开启还是关闭)
     private boolean getCurrentQuestionStatus() {
         //当前答案id是否在策略中
@@ -439,11 +474,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         int index = 0;
         //当前问题是否开启(默认所有问题都是开启的)
         boolean isEnable = true;
+        //判断mList最后一个id是否在mDecisionMakingResponse.getData().get(i).getAnswer_ids()中
+        //如果在的话，然后判断mDecisionMakingResponse.getData().get(i).getAnswer_ids()的长度是不是只有一个，如果只有一个，直接跳出循环
+        //如果mDecisionMakingResponse.getData().get(i).getAnswer_ids()的长度不只有一个，那么就把所有的答案id拿出来，进行判断
+        //看是不是答案id在mDecisionMakingResponse.getData().get(i).getAnswer_ids()集合中
+        //如果mDecisionMakingResponse.getData().get(i).getAnswer_ids()集合被包含于答案id中，那么就可以继续往下走了
         for (int i = 0; i < mDecisionMakingResponse.getData().size(); i++) {
             if (mDecisionMakingResponse.getData().get(i).getAnswer_ids().contains(mList.get(mList.size() - 1).getId())) {
-                isDecisionMakingIn = true;
-                index = i;
-                break;
+                if (mDecisionMakingResponse.getData().get(i).getAnswer_ids().size() == 1) {
+                    isDecisionMakingIn = true;
+                    index = i;
+                    break;
+                } else {
+                    List<Integer> list = new ArrayList<>();
+                    for (int j = 0; j < mList.size(); j++) {
+                        if (mList.get(j).getType().contains("回答")) {
+                            list.add(mList.get(j).getId());
+                        }
+                    }
+
+                    if (list.containsAll(mDecisionMakingResponse.getData().get(i).getAnswer_ids())){
+                        isDecisionMakingIn = true;
+                        index = i;
+                        break;
+                    }
+                }
             }
         }
 
@@ -474,18 +529,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
 
-        imageView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (!TextUtils.isEmpty(editText.getText())) {
-                    if (mAnswerResponse.getData().get(id) != null) {
-                        updateMainAdapter(mAnswerResponse.getData().get(id).get(0).getId(), getAnswerType(0), editText.getText().toString(), false);
-                    } else {
-                        updateMainAdapter(getTestId(mIndex), getAnswerType(0), editText.getText().toString(), false);
-                    }
+        imageView.setOnClickListener(view12 -> {
+            if (!TextUtils.isEmpty(editText.getText())) {
+                if (mAnswerResponse.getData().get(id) != null) {
+                    updateMainAdapter(mAnswerResponse.getData().get(id).get(0).getId(), getAnswerType(0), editText.getText().toString(), false);
                 } else {
-                    Toast.makeText(MainActivity.this, "不能为空", Toast.LENGTH_SHORT).show();
+                    updateMainAdapter(getTestId(mIndex), getAnswerType(0), editText.getText().toString(), false);
                 }
+            } else {
+                Toast.makeText(QuestionAnswerActivity.this, "不能为空", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -523,18 +575,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             adapter.notifyDataSetChanged();
         });
 
-        textConfirm.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Integer answerId = null;
-                for (int i = 0; i < list.size(); i++) {
-                    if (list.get(i).isSelect()) {
-                        answerId = list.get(i).getId();
-                    }
+        textConfirm.setOnClickListener(view1 -> {
+            Integer answerId = null;
+            for (int i = 0; i < list.size(); i++) {
+                if (list.get(i).isSelect()) {
+                    answerId = list.get(i).getId();
                 }
-
-                updateMainAdapter(answerId, getAnswerType(0), list.get(adapter.selectionItem()).getValue(), false);
             }
+
+            updateMainAdapter(answerId, getAnswerType(0), list.get(adapter.selectionItem()).getValue(), false);
         });
 
         mLinearLayout.addView(view);
@@ -546,21 +595,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         View view = LayoutInflater.from(this).inflate(R.layout.main_radio_view, null);
         TextView textLeft = view.findViewById(R.id.main_radio_view_left_tv);
         textLeft.setText(mAnswerResponse.getData().get(id).get(0).getLabel());
-        textLeft.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                updateMainAdapter(mAnswerResponse.getData().get(id).get(0).getId(), getAnswerType(0), textLeft.getText().toString(), false);
-            }
-        });
+        textLeft.setOnClickListener(view1 -> updateMainAdapter(mAnswerResponse.getData().get(id).get(0).getId(), getAnswerType(0), textLeft.getText().toString(), false));
 
         TextView textRight = view.findViewById(R.id.main_radio_view_right_tv);
         textRight.setText(mAnswerResponse.getData().get(id).get(1).getLabel());
-        textRight.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                updateMainAdapter(mAnswerResponse.getData().get(id).get(1).getId(), getAnswerType(0), textRight.getText().toString(), false);
-            }
-        });
+        textRight.setOnClickListener(view12 -> updateMainAdapter(mAnswerResponse.getData().get(id).get(1).getId(), getAnswerType(0), textRight.getText().toString(), false));
         mLinearLayout.addView(view);
     }
 
@@ -601,20 +640,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             adapter.notifyItemChanged(i);
         });
 
-        textView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                List<String> dataList = new ArrayList<>();
-                Integer answerId = null;
-                for (int i = 0; i < list.size(); i++) {
-                    if (list.get(i).isSelect()) {
-                        dataList.add(list.get(i).getTitle());
-                        answerId = list.get(i).getId();
-                    }
+        textView.setOnClickListener(view1 -> {
+            List<String> dataList = new ArrayList<>();
+            Integer answerId = null;
+            for (int i = 0; i < list.size(); i++) {
+                if (list.get(i).isSelect()) {
+                    dataList.add(list.get(i).getTitle());
+                    answerId = list.get(i).getId();
                 }
-
-                updateMainAdapter(answerId, getAnswerType(0), new Gson().toJson(dataList), false);
             }
+
+            updateMainAdapter(answerId, getAnswerType(0), new Gson().toJson(dataList), false);
         });
 
         mLinearLayout.addView(view);
@@ -741,7 +777,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     mMediaRecorder.prepare();
                     /* ④开始 */
                     mMediaRecorder.start();
-                    mHandler.sendEmptyMessage(MSG_AUDIO_HAS_PREPARED);
+                    mHandlerTiming.sendEmptyMessage(MSG_AUDIO_HAS_PREPARED);
                     voiceView.setVisibility(View.VISIBLE);
                     voiceView.startAnimation();
                 } catch (IllegalStateException | IOException e) {
@@ -834,15 +870,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             dialog.dismiss();
         });
 
-        frameSend.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                dialog.dismiss();
-                if (mAnswerResponse.getData().get(id) != null) {
-                    updateMainAdapter(mAnswerResponse.getData().get(id).get(0).getId(), getAnswerType(2), file.getAbsolutePath(), false);
-                } else {
-                    updateMainAdapter(getTestId(mIndex), getAnswerType(2), file.getAbsolutePath(), false);
-                }
+        frameSend.setOnClickListener(view -> {
+            dialog.dismiss();
+            if (mAnswerResponse.getData().get(id) != null) {
+                updateMainAdapter(mAnswerResponse.getData().get(id).get(0).getId(), getAnswerType(2), file.getAbsolutePath(), false);
+            } else {
+                updateMainAdapter(getTestId(mIndex), getAnswerType(2), file.getAbsolutePath(), false);
             }
         });
     }
@@ -888,15 +921,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
 
         frameClear.setOnClickListener(view1 -> signaturePad.clear());
-        textSubmit.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Uri uri = Uri.parse(MediaStore.Images.Media.insertImage(getContentResolver(), signaturePad.getSignatureBitmap(), null, null));
-                if (mAnswerResponse.getData().get(id) != null) {
-                    updateMainAdapter(mAnswerResponse.getData().get(id).get(0).getId(), getAnswerType(1), uri.toString(), false);
-                } else {
-                    updateMainAdapter(getTestId(mIndex), getAnswerType(1), uri.toString(), false);
-                }
+        textSubmit.setOnClickListener(view12 -> {
+            Uri uri = Uri.parse(MediaStore.Images.Media.insertImage(getContentResolver(), signaturePad.getSignatureBitmap(), null, null));
+            if (mAnswerResponse.getData().get(id) != null) {
+                updateMainAdapter(mAnswerResponse.getData().get(id).get(0).getId(), getAnswerType(1), uri.toString(), false);
+            } else {
+                updateMainAdapter(getTestId(mIndex), getAnswerType(1), uri.toString(), false);
             }
         });
 
@@ -1000,64 +1030,44 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         AddRegionalChoiceViewAdapter adapter = new AddRegionalChoiceViewAdapter(this, mCurrentShowList);
         recyclerView.setAdapter(adapter);
         List<String> list = new ArrayList<>();
-        adapter.setOnItemListener(new AddRegionalChoiceViewAdapter.ItemClickListener() {
-            @Override
-            public void onItemClick(String id, String value) {
-                //选择分区的逻辑是，用一个recyclerView展示，选择一级地区后，清空list，将二级地区遍历出来，然后刷新adapter，三级也是一样
-                list.add(value);
-                if (list.size() == 1) {
-                    List<RegionalChoiceBean> secondList = new ArrayList<>();
-                    for (RegionalChoiceBean bean : mAllRegionalChoiceList) {
-                        if (bean.getPid().equals(id)) {
-                            secondList.add(bean);
-                        }
+        adapter.setOnItemListener((id, value) -> {
+            //选择分区的逻辑是，用一个recyclerView展示，选择一级地区后，清空list，将二级地区遍历出来，然后刷新adapter，三级也是一样
+            list.add(value);
+            if (list.size() == 1) {
+                List<RegionalChoiceBean> secondList = new ArrayList<>();
+                for (RegionalChoiceBean bean : mAllRegionalChoiceList) {
+                    if (bean.getPid().equals(id)) {
+                        secondList.add(bean);
                     }
+                }
 
-                    mCurrentShowList.clear();
-                    mCurrentShowList.addAll(secondList);
+                mCurrentShowList.clear();
+                mCurrentShowList.addAll(secondList);
 
-                    textFirst.setText("已选择");
-                    textFirst.setTextColor(getResources().getColor(R.color.regional_choice_text));
-                    viewFirst.setVisibility(View.INVISIBLE);
+                textFirst.setText("已选择");
+                textFirst.setTextColor(getResources().getColor(R.color.regional_choice_text));
+                viewFirst.setVisibility(View.INVISIBLE);
 
-                    textSecond.setText("选择分区");
-                    textSecond.setTextColor(getResources().getColor(R.color.black));
-                    textSecond.setVisibility(View.VISIBLE);
-                    viewSecond.setVisibility(View.VISIBLE);
-                } else if (list.size() == 2) {
-                    List<RegionalChoiceBean> thirdList = new ArrayList<>();
-                    for (RegionalChoiceBean bean : mAllRegionalChoiceList) {
-                        if (bean.getPid().equals(id)) {
-                            thirdList.add(bean);
-                        }
+                textSecond.setText("选择分区");
+                textSecond.setTextColor(getResources().getColor(R.color.black));
+                textSecond.setVisibility(View.VISIBLE);
+                viewSecond.setVisibility(View.VISIBLE);
+            } else if (list.size() == 2) {
+                List<RegionalChoiceBean> thirdList = new ArrayList<>();
+                for (RegionalChoiceBean bean : mAllRegionalChoiceList) {
+                    if (bean.getPid().equals(id)) {
+                        thirdList.add(bean);
                     }
+                }
 
-                    mCurrentShowList.clear();
-                    mCurrentShowList.addAll(thirdList);
+                mCurrentShowList.clear();
+                mCurrentShowList.addAll(thirdList);
 
-                    textSecond.setText("已选择");
-                    textSecond.setTextColor(getResources().getColor(R.color.regional_choice_text));
-                    viewSecond.setVisibility(View.INVISIBLE);
+                textSecond.setText("已选择");
+                textSecond.setTextColor(getResources().getColor(R.color.regional_choice_text));
+                viewSecond.setVisibility(View.INVISIBLE);
 
-                    if (mCurrentShowList.size() == 0) {
-                        StringBuilder text = new StringBuilder();
-                        for (String s : list) {
-                            text.append(s);
-                        }
-
-                        if (mAnswerResponse.getData().get(id) != null) {
-                            updateMainAdapter(mAnswerResponse.getData().get(answerId).get(0).getId(), getAnswerType(0), text.toString(), false);
-                        } else {
-                            updateMainAdapter(getTestId(mIndex), getAnswerType(0), text.toString(), false);
-                        }
-
-                    } else {
-                        textThird.setText("选择分区");
-                        textThird.setTextColor(getResources().getColor(R.color.black));
-                        textThird.setVisibility(View.VISIBLE);
-                        viewThird.setVisibility(View.VISIBLE);
-                    }
-                } else if (list.size() == 3) {
+                if (mCurrentShowList.size() == 0) {
                     StringBuilder text = new StringBuilder();
                     for (String s : list) {
                         text.append(s);
@@ -1068,10 +1078,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     } else {
                         updateMainAdapter(getTestId(mIndex), getAnswerType(0), text.toString(), false);
                     }
+
+                } else {
+                    textThird.setText("选择分区");
+                    textThird.setTextColor(getResources().getColor(R.color.black));
+                    textThird.setVisibility(View.VISIBLE);
+                    viewThird.setVisibility(View.VISIBLE);
+                }
+            } else if (list.size() == 3) {
+                StringBuilder text = new StringBuilder();
+                for (String s : list) {
+                    text.append(s);
                 }
 
-                adapter.notifyDataSetChanged();
+                if (mAnswerResponse.getData().get(id) != null) {
+                    updateMainAdapter(mAnswerResponse.getData().get(answerId).get(0).getId(), getAnswerType(0), text.toString(), false);
+                } else {
+                    updateMainAdapter(getTestId(mIndex), getAnswerType(0), text.toString(), false);
+                }
             }
+
+            adapter.notifyDataSetChanged();
         });
 
         mLinearLayout.addView(view);
@@ -1095,19 +1122,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
 
         TextView textConfirm = view.findViewById(R.id.main_form_view_confirm_tv);
-        textConfirm.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (adapter.getAllEditText().equals("")) {
-                    Toast.makeText(MainActivity.this, "请填写完整", Toast.LENGTH_SHORT).show();
-                    return;
-                }
+        textConfirm.setOnClickListener(view1 -> {
+            if (adapter.getAllEditText().equals("")) {
+                Toast.makeText(QuestionAnswerActivity.this, "请填写完整", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
-                if (mAnswerResponse.getData().get(id) != null) {
-                    updateMainAdapter(mAnswerResponse.getData().get(id).get(0).getId(), getAnswerType(0), adapter.getAllEditText(), false);
-                } else {
-                    updateMainAdapter(getTestId(mIndex), getAnswerType(0), adapter.getAllEditText(), false);
-                }
+            if (mAnswerResponse.getData().get(id) != null) {
+                updateMainAdapter(mAnswerResponse.getData().get(id).get(0).getId(), getAnswerType(0), adapter.getAllEditText(), false);
+            } else {
+                updateMainAdapter(getTestId(mIndex), getAnswerType(0), adapter.getAllEditText(), false);
             }
         });
 
@@ -1153,7 +1177,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @SuppressLint("HandlerLeak")
-    private Handler mHandler = new Handler() {
+    private Handler mHandlerTiming = new Handler() {
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what) {
@@ -1164,7 +1188,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             try {
                                 Thread.sleep(100);
                                 mTimer += 0.1f;
-                                mHandler.sendEmptyMessage(MSG_VOLUME_UPDATED);
+                                mHandlerTiming.sendEmptyMessage(MSG_VOLUME_UPDATED);
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
@@ -1184,17 +1208,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //动态添加时间选择器TimeSelectView
     private void addTimeSelectView(String id) {
         mLinearLayout.setVisibility(View.VISIBLE);
-        TimePickerView timePickerView = new TimePickerBuilder(this, new OnTimeSelectListener() {
-            @Override
-            public void onTimeSelect(Date date, View v) {
-                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-                String time = format.format(date);
+        TimePickerView timePickerView = new TimePickerBuilder(this, (date, v) -> {
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+            String time = format.format(date);
 
-                if (mAnswerResponse.getData().get(id) != null) {
-                    updateMainAdapter(mAnswerResponse.getData().get(id).get(0).getId(), getAnswerType(0), time, false);
-                } else {
-                    updateMainAdapter(getTestId(mIndex), getAnswerType(0), time, false);
-                }
+            if (mAnswerResponse.getData().get(id) != null) {
+                updateMainAdapter(mAnswerResponse.getData().get(id).get(0).getId(), getAnswerType(0), time, false);
+            } else {
+                updateMainAdapter(getTestId(mIndex), getAnswerType(0), time, false);
             }
         }).setType(new boolean[]{true, true, true, false, false, false})
                 .isDialog(true) //默认设置false ，内部实现将DecorView 作为它的父控件。

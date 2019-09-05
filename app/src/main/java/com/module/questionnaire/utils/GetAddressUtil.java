@@ -43,7 +43,7 @@ public class GetAddressUtil {
 //                stringBuilder.append(address.getSubLocality()).append("_");//香洲区
 //                stringBuilder.append(address.getLatitude()).append("_");//经度
 //                stringBuilder.append(address.getLongitude());//维度
-                Log.d("MainActivity", "地址信息--->" + stringBuilder);
+                Log.d("QuestionAnswerActivity", "地址信息--->" + stringBuilder);
             }
         } catch (IOException e) {
             // TODO Auto-generated catch block

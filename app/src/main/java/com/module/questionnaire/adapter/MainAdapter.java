@@ -30,6 +30,7 @@ public class MainAdapter extends RecyclerView.Adapter {
 
     private Context mContext;
     private List<QuestionAnswerBean> mList;
+    private Handler mHandler = new Handler(Looper.getMainLooper());
 
     public MainAdapter(Context context, List<QuestionAnswerBean> list) {
         this.mContext = context;
@@ -108,8 +109,7 @@ public class MainAdapter extends RecyclerView.Adapter {
         QuestionHolder1 holder = (QuestionHolder1) viewHolder;
         holder.mLoadingView.setViewColor(mContext.getResources().getColor(R.color.black));
         holder.mLoadingView.startAnim();
-        Handler handler = new Handler(Looper.getMainLooper());
-        handler.postDelayed(() -> {
+        mHandler.postDelayed(() -> {
             if (mItemUpdateListener != null) {
                 if (mList.get(position).isContinuous()) {
                     mItemUpdateListener.onAnswerInteraction();
@@ -138,8 +138,7 @@ public class MainAdapter extends RecyclerView.Adapter {
         QuestionHolder2 holder = (QuestionHolder2) viewHolder;
         holder.mLoadingView.setViewColor(mContext.getResources().getColor(R.color.black));
         holder.mLoadingView.startAnim();
-        Handler handler = new Handler(Looper.getMainLooper());
-        handler.postDelayed(() -> {
+        mHandler.postDelayed(() -> {
             if (mItemUpdateListener != null) {
                 mItemUpdateListener.onQuestionInteraction(String.valueOf(mList.get(position).getId()));
             }
@@ -210,8 +209,7 @@ public class MainAdapter extends RecyclerView.Adapter {
         Glide.with(mContext).load(R.drawable.icon_default_user_avatar).apply(new RequestOptions().circleCrop().placeholder(R.mipmap.ic_launcher)).into(holder.imageView);
         holder.textView.setText(mList.get(position).getLabel());
         if (mItemUpdateListener != null) {
-            Handler handler = new Handler(Looper.getMainLooper());
-            handler.postDelayed(() -> mItemUpdateListener.onAnswerInteraction(), 500);
+            mHandler.postDelayed(() -> mItemUpdateListener.onAnswerInteraction(), 500);
         }
     }
 
@@ -224,8 +222,7 @@ public class MainAdapter extends RecyclerView.Adapter {
             Toast.makeText(mContext, mList.get(position).getLabel(), Toast.LENGTH_SHORT).show();
         }
         if (mItemUpdateListener != null) {
-            Handler handler = new Handler(Looper.getMainLooper());
-            handler.postDelayed(() -> mItemUpdateListener.onAnswerInteraction(), 500);
+            mHandler.postDelayed(() -> mItemUpdateListener.onAnswerInteraction(), 500);
         }
     }
 
@@ -280,8 +277,7 @@ public class MainAdapter extends RecyclerView.Adapter {
         });
 
         if (mItemUpdateListener != null) {
-            Handler handler = new Handler(Looper.getMainLooper());
-            handler.postDelayed(() -> mItemUpdateListener.onAnswerInteraction(), 500);
+            mHandler.postDelayed(() -> mItemUpdateListener.onAnswerInteraction(), 500);
         }
     }
 
@@ -317,6 +313,10 @@ public class MainAdapter extends RecyclerView.Adapter {
                 break;
         }
         return type;
+    }
+
+    public void refreshAdapter() {
+        mHandler.removeCallbacksAndMessages(null);
     }
 
     public class QuestionHolder1 extends RecyclerView.ViewHolder {
