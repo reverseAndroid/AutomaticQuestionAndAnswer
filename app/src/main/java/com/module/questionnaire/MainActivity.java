@@ -9,7 +9,6 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationManager;
@@ -35,7 +34,6 @@ import android.support.v7.widget.OrientationHelper;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -44,7 +42,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -53,7 +50,6 @@ import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.alibaba.android.arouter.launcher.ARouter;
 import com.bigkoo.pickerview.builder.TimePickerBuilder;
 import com.bigkoo.pickerview.listener.OnTimeSelectListener;
 import com.bigkoo.pickerview.view.TimePickerView;
@@ -81,7 +77,6 @@ import com.module.questionnaire.utils.GetAddressUtil;
 import com.module.questionnaire.utils.GlideEngine;
 import com.module.questionnaire.utils.LogUtils;
 import com.module.questionnaire.utils.SPUtils;
-import com.module.questionnaire.utils.StringBitmapUtil;
 import com.module.questionnaire.utils.http.ApiRetrofit;
 import com.module.questionnaire.utils.http.Constant;
 import com.module.questionnaire.utils.http.NewApiRetrofit;
@@ -91,8 +86,6 @@ import com.zhihu.matisse.MimeType;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -150,18 +143,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private float mTimer;
     //如果有好几种定位提供方式，当前只取第一次定位到的地址，后面的不管
     private boolean mIsLocation = false;
+    //判断是否是最后一个问题
+    private boolean mIsOver;
     private long mExitTime;
 
     private static final int WRITE_EXTERNAL_STORAGE = 1000;
     private static final int OPEN_ALBUM = 1001;
-    private static final int CAMERA = 1003;
-    private static final int OPEN_CAMERA = 1004;
-    private static final int RECORD_AUDIO = 1005;
-    private static final int OPEN_FILE = 1006;
-    private static final int GPS = 1007;
-    private static final int SETTING_GPS = 1008;
-    private static final int READ_CONTACTS = 1009;
-    private static final int SELECTION_CONTACT = 1010;
+    private static final int CAMERA = 1002;
+    private static final int OPEN_CAMERA = 1003;
+    private static final int RECORD_AUDIO = 1004;
+    private static final int OPEN_FILE = 1005;
+    private static final int GPS = 1006;
+    private static final int READ_CONTACTS = 1007;
+    private static final int SELECTION_CONTACT = 1008;
 
     private static final int MSG_AUDIO_HAS_PREPARED = 101;
     private static final int MSG_VOLUME_UPDATED = 102;
@@ -293,6 +287,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .subscribe(answerResponse -> {
                     if (answerResponse.isSuccess()) {
                         mAnswerResponse = answerResponse;
+
+                        mIndex = 37;
+
                         QuestionAnswerBean bean = new QuestionAnswerBean();
                         bean.setId(mQuestionResponse.getData().get(mIndex).getId());
                         bean.setType(getQuestionType(mQuestionResponse.getData().get(mIndex).getType()));
@@ -335,6 +332,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     /**
      * onQuestionInteraction是作为问答方数据加载完毕后，通知回答方做出反应的接口
+     * (就是用于处理得到问题后，做出答案类型判断并展示出相应UI)
      * id=问题id，需要问题id来取出答案的bean
      */
     @Override
@@ -409,23 +407,56 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     /**
      * onAnswerInteraction是作为回答方数据加载完毕后，通知问答方做出反应的接口
+     * (在用户回答答案后，用于继续问下一个问题)
      */
     @Override
     public void onAnswerInteraction() {
-        for (int i = 0; i < mDecisionMakingResponse.getData().size(); i++) {
-            if (mList.get(mList.size() - 1).getType().contains("回答")) {
-                for (int j = 0; j < mDecisionMakingResponse.getData().get(i).getAnswer_ids().size(); j++) {
-                    if (mList.get(mList.size() - 1).getId().equals(mDecisionMakingResponse.getData().get(i).getAnswer_ids().get(j))) {
-                        if (mDecisionMakingResponse.getData().get(i).getClose_questions().contains(mQuestionResponse.getData().get(mIndex).getId())) {
-                            mIndex++;
-                        }
-                    }
-                }
+        //这里判断当前问题状态，如果问题是启用，正常往下走，如果问题是禁用，那么mIndex就自增，然后继续判断自增后的问题是否禁用
+        //由于mIndex不能超过mQuestionResponse.getData().size()，所以，加个判断，防止下标越界
+        while (!getCurrentQuestionStatus()) {
+            mIndex++;
+            if (mIndex > mQuestionResponse.getData().size() - 1) {
+                mIndex--;
+                break;
             }
         }
 
-        updateMainAdapter(mQuestionResponse.getData().get(mIndex).getId(), getQuestionType(mQuestionResponse.getData().get(mIndex).getType()), mQuestionResponse.getData().get(mIndex).getLabel(), false);
+        //判断当前的最后一个item id是否和倒数第二个相等，如果相等，判断为最后一个问题，设置mIsOver为true，这样，下次就不会再继续问问题了
+        if (mList.get(mList.size() - 1).getId().equals(mList.get(mList.size() - 2).getId())) {
+            mIsOver = true;
+        } else {
+            if (!mIsOver) {
+                updateMainAdapter(mQuestionResponse.getData().get(mIndex).getId(), getQuestionType(mQuestionResponse.getData().get(mIndex).getType()), mQuestionResponse.getData().get(mIndex).getLabel(), false);
+            }
+        }
         updateNestScrollView(false);
+    }
+
+    //获取当前问题的策略(开启还是关闭)
+    private boolean getCurrentQuestionStatus() {
+        //当前答案id是否在策略中
+        boolean isDecisionMakingIn = false;
+        int index = 0;
+        //当前问题是否开启(默认所有问题都是开启的)
+        boolean isEnable = true;
+        for (int i = 0; i < mDecisionMakingResponse.getData().size(); i++) {
+            if (mDecisionMakingResponse.getData().get(i).getAnswer_ids().contains(mList.get(mList.size() - 1).getId())) {
+                isDecisionMakingIn = true;
+                index = i;
+                break;
+            }
+        }
+
+        if (isDecisionMakingIn) {
+            if (mDecisionMakingResponse.getData().get(index).getClose_questions().contains(mQuestionResponse.getData().get(mIndex).getId())) {
+                isEnable = false;
+            }
+
+            if (mDecisionMakingResponse.getData().get(index).getOpen_questions().contains(mQuestionResponse.getData().get(mIndex).getId())) {
+                isEnable = true;
+            }
+        }
+        return isEnable;
     }
 
     //动态添加输入框的EditTextView
@@ -1112,7 +1143,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(baseResponse -> {
                     if (baseResponse.isSuccess()) {
-                        updateMainAdapter(dataBean.getId(), getQuestionType(dataBean.getType()), baseResponse.getData(), true);
+                        if (mIndex == mQuestionResponse.getData().size() - 1) {
+                            updateMainAdapter(dataBean.getId(), getQuestionType(dataBean.getType()), baseResponse.getData(), true);
+                        } else {
+                            updateMainAdapter(getTestId(dataBean.getId()), getQuestionType(dataBean.getType()), baseResponse.getData(), true);
+                        }
                     }
                 }, throwable -> LogUtils.e(throwable.getMessage()));
     }
@@ -1361,7 +1396,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     //addView完之后，不等于马上就会显示，而是在队列中等待处理，虽然很快，但是如果立即调用fullScroll，view可能还没有显示出来，所以会失败，应该通过handler在新线程中更新。
     private void updateNestScrollView(boolean isIncrement) {
-        if (isIncrement) {
+        if (isIncrement && mIndex < mQuestionResponse.getData().size() - 1) {
             mIndex++;
         }
         Handler handler = new Handler();
