@@ -5,20 +5,19 @@
     android:background="@color/white"
     android:orientation="vertical">
 
-    <android.support.v7.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/main_recycler_view_rv"
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/question_form_view_rv"
         android:layout_width="match_parent"
-        android:layout_height="250dp"
-        android:overScrollMode="never"
-        android:scrollbars="none" />
+        android:layout_height="wrap_content"/>
 
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
+        android:layout_marginTop="15dp"
         android:background="@color/gray" />
 
     <TextView
-        android:id="@+id/main_recycler_view_confirm_tv"
+        android:id="@+id/question_form_view_confirm_tv"
         android:layout_width="match_parent"
         android:layout_height="45dp"
         android:gravity="center"

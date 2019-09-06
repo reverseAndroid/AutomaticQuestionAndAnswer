@@ -15,7 +15,7 @@
         android:orientation="horizontal">
 
         <TextView
-            android:id="@+id/main_radio_view_left_tv"
+            android:id="@+id/question_radio_view_left_tv"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -31,7 +31,7 @@
             android:background="@color/gray" />
 
         <TextView
-            android:id="@+id/main_radio_view_right_tv"
+            android:id="@+id/question_radio_view_right_tv"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"

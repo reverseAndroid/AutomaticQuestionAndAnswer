@@ -6,7 +6,7 @@
     android:orientation="vertical">
 
     <com.github.gcacace.signaturepad.views.SignaturePad
-        android:id="@+id/main_customize_signature_view_sp"
+        android:id="@+id/question_customize_signature_view_sp"
         android:layout_width="match_parent"
         android:layout_height="200dp"
         app:penColor="@android:color/black" />
@@ -23,7 +23,7 @@
         android:orientation="horizontal">
 
         <FrameLayout
-            android:id="@+id/main_customize_signature_view_clear_fl"
+            android:id="@+id/question_customize_signature_view_clear_fl"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="2"
@@ -44,7 +44,7 @@
             android:background="@color/gray" />
 
         <TextView
-            android:id="@+id/main_customize_signature_view_submit_tv"
+            android:id="@+id/question_customize_signature_view_submit_tv"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"

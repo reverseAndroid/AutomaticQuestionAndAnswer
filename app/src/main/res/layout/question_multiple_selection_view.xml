@@ -6,13 +6,13 @@
     android:background="@color/white">
 
     <android.support.v7.widget.RecyclerView
-        android:id="@+id/main_multiple_selection_rv"
+        android:id="@+id/question_multiple_selection_rv"
         android:layout_width="match_parent"
         android:layout_height="200dp"
         android:overScrollMode="never"
         android:paddingBottom="20dp"
         android:scrollbars="none"
-        app:layout_constraintBottom_toTopOf="@id/main_multiple_selection_confirm_tv"
+        app:layout_constraintBottom_toTopOf="@id/question_multiple_selection_confirm_tv"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
@@ -20,10 +20,10 @@
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="@color/gray"
-        app:layout_constraintBottom_toTopOf="@id/main_multiple_selection_confirm_tv" />
+        app:layout_constraintBottom_toTopOf="@id/question_multiple_selection_confirm_tv" />
 
     <TextView
-        android:id="@+id/main_multiple_selection_confirm_tv"
+        android:id="@+id/question_multiple_selection_confirm_tv"
         android:layout_width="match_parent"
         android:layout_height="45dp"
         android:gravity="center"

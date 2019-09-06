@@ -61,19 +61,19 @@ public class QuestionAnswerAdapter extends RecyclerView.Adapter {
         switch (viewType) {
             case 0:
             case 5:
-                mViewHolder = new QuestionHolder1(inflater.inflate(R.layout.item_main_question, parent, false));
+                mViewHolder = new QuestionHolder1(inflater.inflate(R.layout.item_question_question, parent, false));
                 break;
             case 1:
-                mViewHolder = new QuestionHolder2(inflater.inflate(R.layout.item_main_question2, parent, false));
+                mViewHolder = new QuestionHolder2(inflater.inflate(R.layout.item_question_question2, parent, false));
                 break;
             case 2:
-                mViewHolder = new AnswerHolder1(inflater.inflate(R.layout.item_main_answer, parent, false));
+                mViewHolder = new AnswerHolder1(inflater.inflate(R.layout.item_question_answer, parent, false));
                 break;
             case 3:
-                mViewHolder = new AnswerHolder2(inflater.inflate(R.layout.item_main_answer2, parent, false));
+                mViewHolder = new AnswerHolder2(inflater.inflate(R.layout.item_question_answer2, parent, false));
                 break;
             case 4:
-                mViewHolder = new AnswerHolder3(inflater.inflate(R.layout.item_main_answer3, parent, false));
+                mViewHolder = new AnswerHolder3(inflater.inflate(R.layout.item_question_answer3, parent, false));
                 break;
             default:
                 break;
@@ -327,9 +327,9 @@ public class QuestionAnswerAdapter extends RecyclerView.Adapter {
 
         public QuestionHolder1(@NonNull View itemView) {
             super(itemView);
-            imageView = itemView.findViewById(R.id.item_main_question_avatar_iv);
-            textView = itemView.findViewById(R.id.item_main_question_content_tv);
-            mLoadingView = itemView.findViewById(R.id.item_main_question_loading_lvcj);
+            imageView = itemView.findViewById(R.id.item_question_question_avatar_iv);
+            textView = itemView.findViewById(R.id.item_question_question_content_tv);
+            mLoadingView = itemView.findViewById(R.id.item_question_question_loading_lvcj);
         }
     }
 
@@ -342,10 +342,10 @@ public class QuestionAnswerAdapter extends RecyclerView.Adapter {
 
         public QuestionHolder2(View itemView) {
             super(itemView);
-            imageAvatar = itemView.findViewById(R.id.item_main_question2_avatar_iv);
-            imageAudioPlayer = itemView.findViewById(R.id.item_main_question2_audio_player_iv);
-            textView = itemView.findViewById(R.id.item_main_question2_content_tv);
-            mLoadingView = itemView.findViewById(R.id.item_main_question2_loading_lvcj);
+            imageAvatar = itemView.findViewById(R.id.item_question_question2_avatar_iv);
+            imageAudioPlayer = itemView.findViewById(R.id.item_question_question2_audio_player_iv);
+            textView = itemView.findViewById(R.id.item_question_question2_content_tv);
+            mLoadingView = itemView.findViewById(R.id.item_question_question2_loading_lvcj);
         }
     }
 
@@ -356,8 +356,8 @@ public class QuestionAnswerAdapter extends RecyclerView.Adapter {
 
         public AnswerHolder1(@NonNull View itemView) {
             super(itemView);
-            imageView = itemView.findViewById(R.id.item_main_answer_avatar_iv);
-            textView = itemView.findViewById(R.id.item_main_answer_content_tv);
+            imageView = itemView.findViewById(R.id.item_question_answer_avatar_iv);
+            textView = itemView.findViewById(R.id.item_question_answer_content_tv);
         }
     }
 
@@ -368,8 +368,8 @@ public class QuestionAnswerAdapter extends RecyclerView.Adapter {
 
         public AnswerHolder2(View itemView) {
             super(itemView);
-            imageView = itemView.findViewById(R.id.item_main_answer3_avatar_iv);
-            imagePhoto = itemView.findViewById(R.id.item_main_answer3_photo_iv);
+            imageView = itemView.findViewById(R.id.item_question_answer3_avatar_iv);
+            imagePhoto = itemView.findViewById(R.id.item_question_answer3_photo_iv);
         }
     }
 
@@ -381,9 +381,9 @@ public class QuestionAnswerAdapter extends RecyclerView.Adapter {
 
         public AnswerHolder3(View itemView) {
             super(itemView);
-            imageAvatar = itemView.findViewById(R.id.item_main_answer4_avatar_iv);
-            imageAudioPlayer = itemView.findViewById(R.id.item_main_answer4_audio_player_iv);
-            textView = itemView.findViewById(R.id.item_main_answer4_content_tv);
+            imageAvatar = itemView.findViewById(R.id.item_question_answer4_avatar_iv);
+            imageAudioPlayer = itemView.findViewById(R.id.item_question_answer4_audio_player_iv);
+            textView = itemView.findViewById(R.id.item_question_answer4_content_tv);
         }
     }
 }

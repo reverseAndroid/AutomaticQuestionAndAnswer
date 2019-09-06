@@ -52,14 +52,14 @@
     </android.support.design.widget.AppBarLayout>
 
     <android.support.v4.widget.NestedScrollView
-        android:id="@+id/main_nsv"
+        android:id="@+id/question_nsv"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:background="@color/bg"
         android:fillViewport="true"
         android:overScrollMode="never"
         android:scrollbars="none"
-        app:layout_constraintBottom_toTopOf="@id/main_answer_option_ll"
+        app:layout_constraintBottom_toTopOf="@id/question_answer_option_ll"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/layout_title_abl">
@@ -78,20 +78,20 @@
                 android:paddingTop="10dp">
 
                 <ImageView
-                    android:id="@+id/main_customer_service_avatar_iv"
+                    android:id="@+id/question_customer_service_avatar_iv"
                     android:layout_width="100dp"
                     android:layout_height="100dp"
                     android:layout_gravity="center" />
 
                 <TextView
-                    android:id="@+id/main_customer_service_name_tv"
+                    android:id="@+id/question_customer_service_name_tv"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
                     android:text="客服小娜" />
 
                 <RatingBar
-                    android:id="@+id/main_customer_service_evaluation_rb"
+                    android:id="@+id/question_customer_service_evaluation_rb"
                     style="@style/Widget.AppCompat.RatingBar.Small"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -99,7 +99,7 @@
                     android:max="5" />
 
                 <TextView
-                    android:id="@+id/main_customer_service_job_tv"
+                    android:id="@+id/question_customer_service_job_tv"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
@@ -108,7 +108,7 @@
             </LinearLayout>
 
             <android.support.v7.widget.RecyclerView
-                android:id="@+id/main_conversation_rv"
+                android:id="@+id/question_conversation_rv"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
@@ -122,7 +122,7 @@
     </android.support.v4.widget.NestedScrollView>
 
     <LinearLayout
-        android:id="@+id/main_answer_option_ll"
+        android:id="@+id/question_answer_option_ll"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"

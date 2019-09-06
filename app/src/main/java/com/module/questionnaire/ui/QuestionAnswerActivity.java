@@ -9,7 +9,6 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationManager;
 import android.media.MediaPlayer;
@@ -27,8 +26,6 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v4.widget.NestedScrollView;
-import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.OrientationHelper;
 import android.support.v7.widget.RecyclerView;
@@ -57,13 +54,13 @@ import com.bumptech.glide.request.RequestOptions;
 import com.github.gcacace.signaturepad.views.SignaturePad;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.jaeger.library.StatusBarUtil;
 import com.module.questionnaire.R;
 import com.module.questionnaire.adapter.question.AddFormViewAdapter;
 import com.module.questionnaire.adapter.question.AddRecyclerViewAdapter;
 import com.module.questionnaire.adapter.question.AddRegionalChoiceViewAdapter;
 import com.module.questionnaire.adapter.question.QuestionAnswerAdapter;
 import com.module.questionnaire.adapter.question.MultipleSelectionViewAdapter;
+import com.module.questionnaire.base.BaseActivity;
 import com.module.questionnaire.bean.ContactBean;
 import com.module.questionnaire.bean.MultipleSelectionBean;
 import com.module.questionnaire.bean.QuestionAnswerBean;
@@ -77,7 +74,6 @@ import com.module.questionnaire.utils.GetAddressUtil;
 import com.module.questionnaire.utils.GlideEngine;
 import com.module.questionnaire.utils.LogUtils;
 import com.module.questionnaire.utils.SPUtils;
-import com.module.questionnaire.utils.http.ApiRetrofit;
 import com.module.questionnaire.utils.http.Constant;
 import com.module.questionnaire.utils.http.NewApiRetrofit;
 import com.module.questionnaire.widget.VoiceView;
@@ -95,7 +91,7 @@ import java.util.Map;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
-public class QuestionAnswerActivity extends AppCompatActivity implements View.OnClickListener, QuestionAnswerAdapter.ItemUpdateListener {
+public class QuestionAnswerActivity extends BaseActivity implements View.OnClickListener, QuestionAnswerAdapter.ItemUpdateListener {
 
     private Toolbar mToolbar;
     private TextView mTextTitle;
@@ -163,51 +159,12 @@ public class QuestionAnswerActivity extends AppCompatActivity implements View.On
     private static final int MAX_LENGTH = 1000 * 60 * 10;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_question_answer);
-        StatusBarUtil.setColor(this, Color.WHITE, 0);
-        //修改状态栏字体颜色变成黑色
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            View decor = getWindow().getDecorView();
-            decor.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-        }
-
-        //暂时放在这里
-        initAppConfig();
-        initTitle();
-        initView();
+    protected int initContentView() {
+        return R.layout.activity_question_answer;
     }
 
-    private void initAppConfig() {
-        String url = "http://console.anxinabc.com/api_v2/config/appConfig";
-        ApiRetrofit.getInstance().getAppConfig(url)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(appConfigResponse -> {
-                    if (appConfigResponse.isSuccess()) {
-                        Constant.URL = appConfigResponse.getData().getUrl();
-                        initToken();
-                    }
-                }, throwable -> LogUtils.e(throwable.getMessage()));
-    }
-
-    private void initToken() {
-        Map<String, String> params = new HashMap<>();
-        params.put("mobile", "18993195341");
-        params.put("password", "123456");
-        NewApiRetrofit.getInstance().login(params)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(loginResponse -> {
-                    if (loginResponse.isSuccess()) {
-                        SPUtils.getInstance().put(Constant.TOKEN, loginResponse.getData().getAccess_token());
-                        initData();
-                    }
-                }, throwable -> LogUtils.e(throwable.getMessage()));
-    }
-
-    private void initTitle() {
+    @Override
+    protected void initTitle() {
         mToolbar = findViewById(R.id.layout_title_tb);
         mToolbar.setNavigationOnClickListener(v -> finish());
         mTextTitle = findViewById(R.id.layout_title_title_tv);
@@ -215,16 +172,17 @@ public class QuestionAnswerActivity extends AppCompatActivity implements View.On
         mFrameRefresh.setOnClickListener(this);
     }
 
-    private void initView() {
-        mNestedScrollView = findViewById(R.id.main_nsv);
-        mImageCustomerServiceAvatar = findViewById(R.id.main_customer_service_avatar_iv);
-        mTextCustomerServiceName = findViewById(R.id.main_customer_service_name_tv);
-        mRatingBar = findViewById(R.id.main_customer_service_evaluation_rb);
-        mTextCustomerServiceJob = findViewById(R.id.main_customer_service_job_tv);
-        mRecyclerView = findViewById(R.id.main_conversation_rv);
-        mLinearLayout = findViewById(R.id.main_answer_option_ll);
+    @Override
+    protected void initView() {
+        mNestedScrollView = findViewById(R.id.question_nsv);
+        mImageCustomerServiceAvatar = findViewById(R.id.question_customer_service_avatar_iv);
+        mTextCustomerServiceName = findViewById(R.id.question_customer_service_name_tv);
+        mRatingBar = findViewById(R.id.question_customer_service_evaluation_rb);
+        mTextCustomerServiceJob = findViewById(R.id.question_customer_service_job_tv);
+        mRecyclerView = findViewById(R.id.question_conversation_rv);
+        mLinearLayout = findViewById(R.id.question_answer_option_ll);
 
-        Glide.with(this).load(R.drawable.icon_main_customer_service_avatar).apply(new RequestOptions().circleCrop().placeholder(R.mipmap.ic_launcher)).into(mImageCustomerServiceAvatar);
+        Glide.with(this).load(R.drawable.icon_question_customer_service_avatar).apply(new RequestOptions().circleCrop().placeholder(R.mipmap.ic_launcher)).into(mImageCustomerServiceAvatar);
         mRatingBar.setRating(4);
 
         LinearLayoutManager layoutManager = new LinearLayoutManager(this) {
@@ -237,7 +195,8 @@ public class QuestionAnswerActivity extends AppCompatActivity implements View.On
         mRecyclerView.setLayoutManager(layoutManager);
     }
 
-    private void initData() {
+    @Override
+    protected void initData() {
         //获取问题列表
         Map<String, String> params = new HashMap<>();
         params.put("groupid", "1");
@@ -518,9 +477,9 @@ public class QuestionAnswerActivity extends AppCompatActivity implements View.On
     //动态添加输入框的EditTextView
     private void addEditTextView(String id) {
         mLinearLayout.setVisibility(View.VISIBLE);
-        View view = LayoutInflater.from(this).inflate(R.layout.main_edit_view, null);
-        ImageView imageView = view.findViewById(R.id.main_edit_view_determine_iv);
-        EditText editText = view.findViewById(R.id.main_edit_view_input_et);
+        View view = LayoutInflater.from(this).inflate(R.layout.question_edit_view, null);
+        ImageView imageView = view.findViewById(R.id.question_edit_view_determine_iv);
+        EditText editText = view.findViewById(R.id.question_edit_view_input_et);
         editText.setHint(mQuestionResponse.getData().get(mIndex).getLabel());
         editText.setOnFocusChangeListener((view1, b) -> {
             if (b) {
@@ -548,9 +507,9 @@ public class QuestionAnswerActivity extends AppCompatActivity implements View.On
     //动态添加单选的RecyclerView
     private void addRecyclerView(String id) {
         mLinearLayout.setVisibility(View.VISIBLE);
-        View view = LayoutInflater.from(this).inflate(R.layout.main_recycler_view, null);
-        RecyclerView recyclerView = view.findViewById(R.id.main_recycler_view_rv);
-        TextView textConfirm = view.findViewById(R.id.main_recycler_view_confirm_tv);
+        View view = LayoutInflater.from(this).inflate(R.layout.question_recycler_view, null);
+        RecyclerView recyclerView = view.findViewById(R.id.question_recycler_view_rv);
+        TextView textConfirm = view.findViewById(R.id.question_recycler_view_confirm_tv);
         LinearLayoutManager layoutManagerInfo = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManagerInfo);
         layoutManagerInfo.setOrientation(OrientationHelper.VERTICAL);
@@ -593,12 +552,12 @@ public class QuestionAnswerActivity extends AppCompatActivity implements View.On
     //动态添加单选的RadioView
     private void addRadioView(String id) {
         mLinearLayout.setVisibility(View.VISIBLE);
-        View view = LayoutInflater.from(this).inflate(R.layout.main_radio_view, null);
-        TextView textLeft = view.findViewById(R.id.main_radio_view_left_tv);
+        View view = LayoutInflater.from(this).inflate(R.layout.question_radio_view, null);
+        TextView textLeft = view.findViewById(R.id.question_radio_view_left_tv);
         textLeft.setText(mAnswerResponse.getData().get(id).get(0).getLabel());
         textLeft.setOnClickListener(view1 -> updateMainAdapter(mAnswerResponse.getData().get(id).get(0).getId(), getAnswerType(0), textLeft.getText().toString(), false));
 
-        TextView textRight = view.findViewById(R.id.main_radio_view_right_tv);
+        TextView textRight = view.findViewById(R.id.question_radio_view_right_tv);
         textRight.setText(mAnswerResponse.getData().get(id).get(1).getLabel());
         textRight.setOnClickListener(view12 -> updateMainAdapter(mAnswerResponse.getData().get(id).get(1).getId(), getAnswerType(0), textRight.getText().toString(), false));
         mLinearLayout.addView(view);
@@ -607,9 +566,9 @@ public class QuestionAnswerActivity extends AppCompatActivity implements View.On
     //动态添加多选的MultipleSelectionView
     private void addMultipleSelectionView(String id) {
         mLinearLayout.setVisibility(View.VISIBLE);
-        View view = LayoutInflater.from(this).inflate(R.layout.main_multiple_selection_view, null);
-        RecyclerView recyclerView = view.findViewById(R.id.main_multiple_selection_rv);
-        TextView textView = view.findViewById(R.id.main_multiple_selection_confirm_tv);
+        View view = LayoutInflater.from(this).inflate(R.layout.question_multiple_selection_view, null);
+        RecyclerView recyclerView = view.findViewById(R.id.question_multiple_selection_rv);
+        TextView textView = view.findViewById(R.id.question_multiple_selection_confirm_tv);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         layoutManager.setOrientation(OrientationHelper.VERTICAL);
         recyclerView.setLayoutManager(layoutManager);
@@ -660,9 +619,9 @@ public class QuestionAnswerActivity extends AppCompatActivity implements View.On
     //动态添加上传图片的UploadView
     private void addUploadPhotoView() {
         mLinearLayout.setVisibility(View.VISIBLE);
-        View view = LayoutInflater.from(this).inflate(R.layout.main_upload_photo_view, null);
-        LinearLayout linearAlbum = view.findViewById(R.id.main_upload_photo_view_album_ll);
-        LinearLayout linearCamera = view.findViewById(R.id.main_upload_photo_view_camera_ll);
+        View view = LayoutInflater.from(this).inflate(R.layout.question_upload_photo_view, null);
+        LinearLayout linearAlbum = view.findViewById(R.id.question_upload_photo_view_album_ll);
+        LinearLayout linearCamera = view.findViewById(R.id.question_upload_photo_view_camera_ll);
 
         linearAlbum.setOnClickListener(view1 -> {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
@@ -714,8 +673,8 @@ public class QuestionAnswerActivity extends AppCompatActivity implements View.On
     //动态添加上传文件的UploadFileView
     private void addUploadFileView() {
         mLinearLayout.setVisibility(View.VISIBLE);
-        View view = LayoutInflater.from(this).inflate(R.layout.main_upload_file_view, null);
-        LinearLayout linearFile = view.findViewById(R.id.main_upload_file_view_file_ll);
+        View view = LayoutInflater.from(this).inflate(R.layout.question_upload_file_view, null);
+        LinearLayout linearFile = view.findViewById(R.id.question_upload_file_view_file_ll);
 
         linearFile.setOnClickListener(view1 -> {
             Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
@@ -734,9 +693,9 @@ public class QuestionAnswerActivity extends AppCompatActivity implements View.On
         }
 
         mLinearLayout.setVisibility(View.VISIBLE);
-        View view = LayoutInflater.from(this).inflate(R.layout.main_audio_voice_view, null);
-        VoiceView voiceView = view.findViewById(R.id.main_audio_voice_view_animation_vv);
-        ImageView imageView = view.findViewById(R.id.main_audio_voice_view_iv);
+        View view = LayoutInflater.from(this).inflate(R.layout.question_audio_voice_view, null);
+        VoiceView voiceView = view.findViewById(R.id.question_audio_voice_view_animation_vv);
+        ImageView imageView = view.findViewById(R.id.question_audio_voice_view_iv);
 
         File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/question/audio/" + System.currentTimeMillis() + ".mp4");
         imageView.setOnTouchListener((view1, motionEvent) -> {
@@ -898,10 +857,10 @@ public class QuestionAnswerActivity extends AppCompatActivity implements View.On
     //动态添加自定义签名的CustomizeSignatureView
     private void addCustomizeSignatureView(String id) {
         mLinearLayout.setVisibility(View.VISIBLE);
-        View view = LayoutInflater.from(this).inflate(R.layout.main_customize_signature_view, null);
-        SignaturePad signaturePad = view.findViewById(R.id.main_customize_signature_view_sp);
-        FrameLayout frameClear = view.findViewById(R.id.main_customize_signature_view_clear_fl);
-        TextView textSubmit = view.findViewById(R.id.main_customize_signature_view_submit_tv);
+        View view = LayoutInflater.from(this).inflate(R.layout.question_customize_signature_view, null);
+        SignaturePad signaturePad = view.findViewById(R.id.question_customize_signature_view_sp);
+        FrameLayout frameClear = view.findViewById(R.id.question_customize_signature_view_clear_fl);
+        TextView textSubmit = view.findViewById(R.id.question_customize_signature_view_submit_tv);
         signaturePad.setOnSignedListener(new SignaturePad.OnSignedListener() {
             @Override
             public void onStartSigning() {
@@ -1013,17 +972,17 @@ public class QuestionAnswerActivity extends AppCompatActivity implements View.On
     //动态添加选择省市区的RegionalChoiceView
     private void addRegionalChoiceView(String answerId) {
         mLinearLayout.setVisibility(View.VISIBLE);
-        View view = LayoutInflater.from(this).inflate(R.layout.main_regional_choice_view, null);
-        TextView textFirst = view.findViewById(R.id.main_regional_choice_view_first_tv);
-        View viewFirst = view.findViewById(R.id.main_regional_choice_view_first_v);
+        View view = LayoutInflater.from(this).inflate(R.layout.question_regional_choice_view, null);
+        TextView textFirst = view.findViewById(R.id.question_regional_choice_view_first_tv);
+        View viewFirst = view.findViewById(R.id.question_regional_choice_view_first_v);
 
-        TextView textSecond = view.findViewById(R.id.main_regional_choice_view_second_tv);
-        View viewSecond = view.findViewById(R.id.main_regional_choice_view_second_v);
+        TextView textSecond = view.findViewById(R.id.question_regional_choice_view_second_tv);
+        View viewSecond = view.findViewById(R.id.question_regional_choice_view_second_v);
 
-        TextView textThird = view.findViewById(R.id.main_regional_choice_view_third_tv);
-        View viewThird = view.findViewById(R.id.main_regional_choice_view_third_v);
+        TextView textThird = view.findViewById(R.id.question_regional_choice_view_third_tv);
+        View viewThird = view.findViewById(R.id.question_regional_choice_view_third_v);
 
-        RecyclerView recyclerView = view.findViewById(R.id.main_regional_choice_view_rv);
+        RecyclerView recyclerView = view.findViewById(R.id.question_regional_choice_view_rv);
         LinearLayoutManager layoutManagerInfo = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManagerInfo);
         layoutManagerInfo.setOrientation(OrientationHelper.VERTICAL);
@@ -1108,9 +1067,9 @@ public class QuestionAnswerActivity extends AppCompatActivity implements View.On
     //动态添加表单的FormView
     private void addFormView(String id) {
         mLinearLayout.setVisibility(View.VISIBLE);
-        View view = LayoutInflater.from(this).inflate(R.layout.main_form_view, null);
+        View view = LayoutInflater.from(this).inflate(R.layout.question_form_view, null);
         List<QuestionResponse.DataBean> list = analyzeJson(mQuestionResponse.getData().get(mIndex).getComments());
-        RecyclerView recyclerView = view.findViewById(R.id.main_form_view_rv);
+        RecyclerView recyclerView = view.findViewById(R.id.question_form_view_rv);
         LinearLayoutManager layoutManagerInfo = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManagerInfo);
         layoutManagerInfo.setOrientation(OrientationHelper.VERTICAL);
@@ -1122,7 +1081,7 @@ public class QuestionAnswerActivity extends AppCompatActivity implements View.On
             jumpContact();
         });
 
-        TextView textConfirm = view.findViewById(R.id.main_form_view_confirm_tv);
+        TextView textConfirm = view.findViewById(R.id.question_form_view_confirm_tv);
         textConfirm.setOnClickListener(view1 -> {
             if (adapter.getAllEditText().equals("")) {
                 Toast.makeText(QuestionAnswerActivity.this, "请填写完整", Toast.LENGTH_SHORT).show();

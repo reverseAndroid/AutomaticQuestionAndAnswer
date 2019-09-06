@@ -7,17 +7,17 @@
     android:paddingBottom="20dp">
 
     <RelativeLayout
-        android:id="@+id/main_audio_voice_view_animation_rl"
+        android:id="@+id/question_audio_voice_view_animation_rl"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/white"
-        app:layout_constraintBottom_toTopOf="@id/main_audio_voice_view_rl"
+        app:layout_constraintBottom_toTopOf="@id/question_audio_voice_view_rl"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <com.module.questionnaire.widget.VoiceView
-            android:id="@+id/main_audio_voice_view_animation_vv"
+            android:id="@+id/question_audio_voice_view_animation_vv"
             android:layout_width="match_parent"
             android:layout_height="65dp"
             android:background="@color/bg"
@@ -26,15 +26,15 @@
     </RelativeLayout>
 
     <RelativeLayout
-        android:id="@+id/main_audio_voice_view_rl"
+        android:id="@+id/question_audio_voice_view_rl"
         android:layout_width="match_parent"
         android:layout_height="150dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/main_audio_voice_view_animation_rl">
+        app:layout_constraintTop_toBottomOf="@id/question_audio_voice_view_animation_rl">
 
         <ImageView
-            android:id="@+id/main_audio_voice_view_iv"
+            android:id="@+id/question_audio_voice_view_iv"
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:layout_centerInParent="true"
@@ -48,6 +48,6 @@
         android:text="按住按钮录音"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/main_audio_voice_view_rl" />
+        app:layout_constraintTop_toBottomOf="@id/question_audio_voice_view_rl" />
 
 </android.support.constraint.ConstraintLayout>

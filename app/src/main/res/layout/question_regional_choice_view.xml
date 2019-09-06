@@ -5,7 +5,7 @@
     android:layout_height="wrap_content">
 
     <LinearLayout
-        android:id="@+id/main_regional_choice_view_ll"
+        android:id="@+id/question_regional_choice_view_ll"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/regional_choice_bg"
@@ -19,7 +19,7 @@
             android:paddingTop="10dp">
 
             <TextView
-                android:id="@+id/main_regional_choice_view_first_tv"
+                android:id="@+id/question_regional_choice_view_first_tv"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="6dp"
@@ -28,7 +28,7 @@
                 android:textSize="16dp" />
 
             <View
-                android:id="@+id/main_regional_choice_view_first_v"
+                android:id="@+id/question_regional_choice_view_first_v"
                 android:layout_width="match_parent"
                 android:layout_height="3dp"
                 android:background="@color/black" />
@@ -43,7 +43,7 @@
             android:paddingTop="10dp">
 
             <TextView
-                android:id="@+id/main_regional_choice_view_second_tv"
+                android:id="@+id/question_regional_choice_view_second_tv"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="6dp"
@@ -52,7 +52,7 @@
                 android:visibility="invisible" />
 
             <View
-                android:id="@+id/main_regional_choice_view_second_v"
+                android:id="@+id/question_regional_choice_view_second_v"
                 android:layout_width="match_parent"
                 android:layout_height="3dp"
                 android:background="@color/black"
@@ -68,7 +68,7 @@
             android:paddingTop="10dp">
 
             <TextView
-                android:id="@+id/main_regional_choice_view_third_tv"
+                android:id="@+id/question_regional_choice_view_third_tv"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="6dp"
@@ -77,7 +77,7 @@
                 android:visibility="invisible" />
 
             <View
-                android:id="@+id/main_regional_choice_view_third_v"
+                android:id="@+id/question_regional_choice_view_third_v"
                 android:layout_width="match_parent"
                 android:layout_height="3dp"
                 android:background="@color/black"
@@ -88,12 +88,12 @@
     </LinearLayout>
 
     <android.support.v7.widget.RecyclerView
-        android:id="@+id/main_regional_choice_view_rv"
+        android:id="@+id/question_regional_choice_view_rv"
         android:layout_width="match_parent"
         android:layout_height="250dp"
         android:overScrollMode="never"
         android:scrollbars="none"
-        app:layout_constraintTop_toBottomOf="@id/main_regional_choice_view_ll" />
+        app:layout_constraintTop_toBottomOf="@id/question_regional_choice_view_ll" />
 
     <TextView
         android:layout_width="match_parent"

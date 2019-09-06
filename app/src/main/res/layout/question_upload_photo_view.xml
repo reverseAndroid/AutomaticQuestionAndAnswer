@@ -7,7 +7,7 @@
     android:paddingBottom="30dp">
 
     <LinearLayout
-        android:id="@+id/main_upload_photo_view_album_ll"
+        android:id="@+id/question_upload_photo_view_album_ll"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
@@ -28,7 +28,7 @@
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/main_upload_photo_view_camera_ll"
+        android:id="@+id/question_upload_photo_view_camera_ll"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
