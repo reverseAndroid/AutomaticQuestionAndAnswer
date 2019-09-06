@@ -1,4 +1,4 @@
-package com.module.questionnaire;
+package com.module.questionnaire.ui;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -10,6 +10,7 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
+import com.module.questionnaire.R;
 import com.module.questionnaire.utils.LogUtils;
 
 import java.io.UnsupportedEncodingException;

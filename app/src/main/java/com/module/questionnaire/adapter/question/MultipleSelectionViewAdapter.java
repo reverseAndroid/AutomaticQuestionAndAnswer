@@ -1,4 +1,4 @@
-package com.module.questionnaire.adapter;
+package com.module.questionnaire.adapter.question;
 
 import android.content.Context;
 import android.support.annotation.NonNull;

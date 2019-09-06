@@ -1,4 +1,4 @@
-package com.module.questionnaire;
+package com.module.questionnaire.ui;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -58,11 +58,12 @@ import com.github.gcacace.signaturepad.views.SignaturePad;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.jaeger.library.StatusBarUtil;
-import com.module.questionnaire.adapter.AddFormViewAdapter;
-import com.module.questionnaire.adapter.AddRecyclerViewAdapter;
-import com.module.questionnaire.adapter.AddRegionalChoiceViewAdapter;
-import com.module.questionnaire.adapter.MainAdapter;
-import com.module.questionnaire.adapter.MultipleSelectionViewAdapter;
+import com.module.questionnaire.R;
+import com.module.questionnaire.adapter.question.AddFormViewAdapter;
+import com.module.questionnaire.adapter.question.AddRecyclerViewAdapter;
+import com.module.questionnaire.adapter.question.AddRegionalChoiceViewAdapter;
+import com.module.questionnaire.adapter.question.QuestionAnswerAdapter;
+import com.module.questionnaire.adapter.question.MultipleSelectionViewAdapter;
 import com.module.questionnaire.bean.ContactBean;
 import com.module.questionnaire.bean.MultipleSelectionBean;
 import com.module.questionnaire.bean.QuestionAnswerBean;
@@ -94,7 +95,7 @@ import java.util.Map;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
-public class QuestionAnswerActivity extends AppCompatActivity implements View.OnClickListener, MainAdapter.ItemUpdateListener {
+public class QuestionAnswerActivity extends AppCompatActivity implements View.OnClickListener, QuestionAnswerAdapter.ItemUpdateListener {
 
     private Toolbar mToolbar;
     private TextView mTextTitle;
@@ -106,7 +107,7 @@ public class QuestionAnswerActivity extends AppCompatActivity implements View.On
     private TextView mTextCustomerServiceJob;
     private RecyclerView mRecyclerView;
     private LinearLayout mLinearLayout;
-    private MainAdapter mMainAdapter;
+    private QuestionAnswerAdapter mQuestionAnswerAdapter;
 
     //引导方案
     private BootPlanResponse mBootPlanResponse;
@@ -298,9 +299,9 @@ public class QuestionAnswerActivity extends AppCompatActivity implements View.On
         bean.setType(getQuestionType(mQuestionResponse.getData().get(mIndex).getType()));
         bean.setLabel(mQuestionResponse.getData().get(mIndex).getLabel());
         mList.add(bean);
-        mMainAdapter = new MainAdapter(this, mList);
-        mRecyclerView.setAdapter(mMainAdapter);
-        mMainAdapter.setItemUpdateListener(this);
+        mQuestionAnswerAdapter = new QuestionAnswerAdapter(this, mList);
+        mRecyclerView.setAdapter(mQuestionAnswerAdapter);
+        mQuestionAnswerAdapter.setItemUpdateListener(this);
         mRecyclerView.setVisibility(View.VISIBLE);
     }
 
@@ -330,8 +331,8 @@ public class QuestionAnswerActivity extends AppCompatActivity implements View.On
             mLinearLayout.removeAllViews();
             mLinearLayout.setVisibility(View.GONE);
             mList.clear();
-            mMainAdapter.refreshAdapter();
-            mMainAdapter = null;
+            mQuestionAnswerAdapter.refreshAdapter();
+            mQuestionAnswerAdapter = null;
             setLoadAdapter();
         }
     }
@@ -1353,7 +1354,7 @@ public class QuestionAnswerActivity extends AppCompatActivity implements View.On
         bean.setLabel(label);
         bean.setContinuous(isContinuous);
         mList.add(bean);
-        mMainAdapter.notifyItemInserted(mList.size());
+        mQuestionAnswerAdapter.notifyItemInserted(mList.size());
         mLinearLayout.removeAllViews();
         mLinearLayout.setVisibility(View.GONE);
     }

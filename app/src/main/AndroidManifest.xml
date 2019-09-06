@@ -23,7 +23,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".QuestionAnswerActivity">
+        <activity android:name=".ui.QuestionAnswerActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -42,7 +42,7 @@
                 tools:replace="name,resource" />
         </provider>
 
-        <activity android:name=".WebViewActivity"></activity>
+        <activity android:name=".ui.WebViewActivity"></activity>
     </application>
 
 </manifest>

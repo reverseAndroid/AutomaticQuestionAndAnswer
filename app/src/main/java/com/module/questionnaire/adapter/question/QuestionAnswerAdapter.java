@@ -1,4 +1,4 @@
-package com.module.questionnaire.adapter;
+package com.module.questionnaire.adapter.question;
 
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
@@ -26,13 +26,13 @@ import com.module.questionnaire.bean.QuestionAnswerBean;
 import java.io.IOException;
 import java.util.List;
 
-public class MainAdapter extends RecyclerView.Adapter {
+public class QuestionAnswerAdapter extends RecyclerView.Adapter {
 
     private Context mContext;
     private List<QuestionAnswerBean> mList;
     private Handler mHandler = new Handler(Looper.getMainLooper());
 
-    public MainAdapter(Context context, List<QuestionAnswerBean> list) {
+    public QuestionAnswerAdapter(Context context, List<QuestionAnswerBean> list) {
         this.mContext = context;
         this.mList = list;
     }
