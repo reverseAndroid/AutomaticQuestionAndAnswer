@@ -3,10 +3,7 @@ package com.module.questionnaire.utils.http;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.module.questionnaire.bean.response.AppConfigResponse;
-import com.module.questionnaire.bean.response.LoginResponse;
-import com.module.questionnaire.utils.SPUtils;
-
-import java.util.Map;
+import com.module.questionnaire.utils.Constant;
 
 import okhttp3.MediaType;
 import okhttp3.RequestBody;

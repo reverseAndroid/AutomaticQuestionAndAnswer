@@ -22,7 +22,18 @@ public abstract class BaseActivity extends AppCompatActivity {
     }
 
     private void initStatusBar() {
-        StatusBarUtil.setColor(this, Color.WHITE, 0);
+        switch (getClass().getSimpleName()) {
+            case "SplashActivity":
+                StatusBarUtil.setTransparent(this);
+                break;
+            case "ChoosingLanguageActivity":
+                StatusBarUtil.setTranslucentForImageView(this, 0, null);
+                break;
+            default:
+                StatusBarUtil.setColor(this, Color.WHITE, 0);
+                break;
+        }
+
         //修改状态栏字体颜色变成黑色
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             View decor = getWindow().getDecorView();

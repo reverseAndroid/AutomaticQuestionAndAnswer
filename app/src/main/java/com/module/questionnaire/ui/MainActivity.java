@@ -45,8 +45,8 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
 
     @Override
     protected void initData() {
-        mFragmentList.add(FragmentFactory.getInstance().getHomeFragment());
         mFragmentList.add(FragmentFactory.getInstance().getQuestionFragment());
+        mFragmentList.add(FragmentFactory.getInstance().getQuestionBankFragment());
         mFragmentList.add(FragmentFactory.getInstance().getNewsFragment());
         mFragmentList.add(FragmentFactory.getInstance().getMeFragment());
         mLastFragment = 0;
@@ -98,7 +98,7 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             if ((System.currentTimeMillis() - mExitTime) > 2000) {
-                Toast.makeText(this, "再按一次退出程序", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.again_quit, Toast.LENGTH_SHORT).show();
                 mExitTime = System.currentTimeMillis();
             } else {
                 finish();

@@ -3,8 +3,8 @@ package com.module.questionnaire.ui.fragment;
 public class FragmentFactory {
 
     private static FragmentFactory mInstance;
-    private HomeFragment mHomeFragment;
     private QuestionFragment mQuestionFragment;
+    private QuestionBankFragment mQuestionBankFragment;
     private NewsFragment mNewsFragment;
     private MeFragment mMeFragment;
 
@@ -23,17 +23,6 @@ public class FragmentFactory {
         return mInstance;
     }
 
-    public HomeFragment getHomeFragment() {
-        if (mHomeFragment == null) {
-            synchronized (FragmentFactory.class) {
-                if (mHomeFragment == null) {
-                    mHomeFragment = new HomeFragment();
-                }
-            }
-        }
-        return mHomeFragment;
-    }
-
     public QuestionFragment getQuestionFragment() {
         if (mQuestionFragment == null) {
             synchronized (FragmentFactory.class) {
@@ -43,6 +32,17 @@ public class FragmentFactory {
             }
         }
         return mQuestionFragment;
+    }
+
+    public QuestionBankFragment getQuestionBankFragment() {
+        if (mQuestionBankFragment == null) {
+            synchronized (FragmentFactory.class) {
+                if (mQuestionBankFragment == null) {
+                    mQuestionBankFragment = new QuestionBankFragment();
+                }
+            }
+        }
+        return mQuestionBankFragment;
     }
 
     public NewsFragment getNewsFragment() {

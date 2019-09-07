@@ -27,7 +27,7 @@ public class SplashActivity extends BaseActivity {
     protected void initData() {
         Handler handler = new Handler();
         handler.postDelayed(() -> {
-            Intent intent = new Intent(this, MainActivity.class);
+            Intent intent = new Intent(this, ChoosingLanguageActivity.class);
             startActivity(intent);
             finish();
         }, 2500);

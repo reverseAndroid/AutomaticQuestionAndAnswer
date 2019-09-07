@@ -51,6 +51,7 @@ public class AddFormViewAdapter extends RecyclerView.Adapter {
         AddFormViewHolder holder = (AddFormViewHolder) viewHolder;
         mHolderList.add(holder);
         holder.editText.setHint(mList.get(i).getLabel());
+        // TODO: 2019/9/7 0007 这里的电话判断，需要更改，不然以后语言变换后，不能进行判断
         if (mList.get(i).getLabel().contains("电话")) {
             Drawable drawable = holder.editText.getContext().getResources().getDrawable(R.drawable.icon_form_contact);
             drawable.setBounds(0, 0, 45, 45);

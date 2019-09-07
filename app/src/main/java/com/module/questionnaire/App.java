@@ -6,7 +6,7 @@ import android.content.Context;
 import com.module.questionnaire.utils.LogUtils;
 import com.module.questionnaire.utils.SPUtils;
 import com.module.questionnaire.utils.http.ApiRetrofit;
-import com.module.questionnaire.utils.http.Constant;
+import com.module.questionnaire.utils.Constant;
 import com.module.questionnaire.utils.http.NewApiRetrofit;
 
 import java.util.HashMap;

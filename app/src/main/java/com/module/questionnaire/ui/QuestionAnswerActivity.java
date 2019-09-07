@@ -74,7 +74,7 @@ import com.module.questionnaire.utils.GetAddressUtil;
 import com.module.questionnaire.utils.GlideEngine;
 import com.module.questionnaire.utils.LogUtils;
 import com.module.questionnaire.utils.SPUtils;
-import com.module.questionnaire.utils.http.Constant;
+import com.module.questionnaire.utils.Constant;
 import com.module.questionnaire.utils.http.NewApiRetrofit;
 import com.module.questionnaire.widget.VoiceView;
 import com.zhihu.matisse.Matisse;
@@ -166,7 +166,6 @@ public class QuestionAnswerActivity extends BaseActivity implements View.OnClick
     @Override
     protected void initTitle() {
         mToolbar = findViewById(R.id.layout_title_tb);
-        mToolbar.setNavigationOnClickListener(v -> finish());
         mTextTitle = findViewById(R.id.layout_title_title_tv);
         mFrameRefresh = findViewById(R.id.layout_title_right_fl);
         mFrameRefresh.setOnClickListener(this);
@@ -197,6 +196,9 @@ public class QuestionAnswerActivity extends BaseActivity implements View.OnClick
 
     @Override
     protected void initData() {
+        mTextCustomerServiceName.setText("客服小娜");
+        mTextCustomerServiceJob.setText("私人助理");
+
         //获取问题列表
         Map<String, String> params = new HashMap<>();
         params.put("groupid", "1");
