@@ -5,12 +5,14 @@ public class AppConfigResponse {
     /**
      * success : true
      * msg : success
-     * data : {"appid":"com.loans.lion","appname":"LionLoan","app_name":"LionLoan","name":"狮子贷","url":"https://lion.s1.anxinabc.com/","tabs":null}
+     * data : {"api_url":"http://192.168.10.165/","app_url":"http://saas1.dev.qqdkj.net:9001/","app_btn":false,"agree_url":"http://192.168.10.165/api/v1/agree"}
+     * code : 200
      */
 
     private boolean success;
     private String msg;
     private DataBean data;
+    private int code;
 
     public boolean isSuccess() {
         return success;
@@ -36,69 +38,59 @@ public class AppConfigResponse {
         this.data = data;
     }
 
+    public int getCode() {
+        return code;
+    }
+
+    public void setCode(int code) {
+        this.code = code;
+    }
+
     public static class DataBean {
         /**
-         * appid : com.loans.lion
-         * appname : LionLoan
-         * app_name : LionLoan
-         * name : 狮子贷
-         * url : https://lion.s1.anxinabc.com/
-         * tabs : null
+         * api_url : http://192.168.10.165/
+         * app_url : http://saas1.dev.qqdkj.net:9001/
+         * app_btn : false
+         * agree_url : http://192.168.10.165/api/v1/agree
          */
 
-        private String appid;
-        private String appname;
-        private String app_name;
-        private String name;
-        private String url;
-        private Object tabs;
+        //BaseUrl
+        private String api_url;
+        private String app_url;
+        private boolean app_btn;
+        //协议Url
+        private String agree_url;
 
-        public String getAppid() {
-            return appid;
+        public String getApi_url() {
+            return api_url;
         }
 
-        public void setAppid(String appid) {
-            this.appid = appid;
+        public void setApi_url(String api_url) {
+            this.api_url = api_url;
         }
 
-        public String getAppname() {
-            return appname;
+        public String getApp_url() {
+            return app_url;
         }
 
-        public void setAppname(String appname) {
-            this.appname = appname;
+        public void setApp_url(String app_url) {
+            this.app_url = app_url;
         }
 
-        public String getApp_name() {
-            return app_name;
+        public boolean isApp_btn() {
+            return app_btn;
         }
 
-        public void setApp_name(String app_name) {
-            this.app_name = app_name;
+        public void setApp_btn(boolean app_btn) {
+            this.app_btn = app_btn;
         }
 
-        public String getName() {
-            return name;
+        public String getAgree_url() {
+            return agree_url;
         }
 
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getUrl() {
-            return url;
-        }
-
-        public void setUrl(String url) {
-            this.url = url;
-        }
-
-        public Object getTabs() {
-            return tabs;
-        }
-
-        public void setTabs(Object tabs) {
-            this.tabs = tabs;
+        public void setAgree_url(String agree_url) {
+            this.agree_url = agree_url;
         }
     }
 }

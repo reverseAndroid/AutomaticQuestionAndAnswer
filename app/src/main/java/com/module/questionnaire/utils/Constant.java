@@ -6,7 +6,7 @@ package com.module.questionnaire.utils;
 
 public class Constant {
 
-    public static String BASE_URL = "http://console.anxinabc.com/api_v2/config/appConfig/";
+    public static String BASE_URL = "http://192.168.10.165/api/v1/get_url/";
     public static String URL = "";
 
     public static final String TOKEN = "token";

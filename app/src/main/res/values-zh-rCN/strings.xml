@@ -3,4 +3,6 @@
     <string name="choosing_language">您选择的语言是</string>
     <string name="hello_blank_fragment">你好，黑色碎片</string>
     <string name="again_quit">再按一次退出程序</string>
+    <string name="home_name">首页</string>
+    <string name="me_name">我的</string>
 </resources>

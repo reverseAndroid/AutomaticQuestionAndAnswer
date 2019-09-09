@@ -7,6 +7,7 @@ import com.module.questionnaire.bean.response.BaseResponse;
 import com.module.questionnaire.bean.response.BootPlanResponse;
 import com.module.questionnaire.bean.response.DecisionMakingResponse;
 import com.module.questionnaire.bean.response.LoginResponse;
+import com.module.questionnaire.bean.response.MeListResponse;
 import com.module.questionnaire.bean.response.QuestionResponse;
 import com.module.questionnaire.bean.response.RegionalChoiceResponse;
 import com.module.questionnaire.utils.Constant;
@@ -20,6 +21,7 @@ import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.Multipart;
+import rx.Completable;
 import rx.Observable;
 
 public class NewApiRetrofit extends BaseApiRetrofit {
@@ -96,5 +98,9 @@ public class NewApiRetrofit extends BaseApiRetrofit {
 
     public Observable<DecisionMakingResponse> getDecisionMaking() {
         return mApi.getDecisionMaking();
+    }
+
+    public Observable<MeListResponse> getMeList(Map<String, String> params) {
+        return mApi.getMeList(getFormRequestBody(params));
     }
 }

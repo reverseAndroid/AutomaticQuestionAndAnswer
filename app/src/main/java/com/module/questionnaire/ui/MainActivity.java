@@ -1,11 +1,9 @@
 package com.module.questionnaire.ui;
 
-import android.support.annotation.NonNull;
-import android.support.design.widget.BottomNavigationView;
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.view.KeyEvent;
-import android.view.MenuItem;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
@@ -16,10 +14,10 @@ import com.module.questionnaire.ui.fragment.FragmentFactory;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends BaseActivity implements BottomNavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends BaseActivity implements TabLayout.BaseOnTabSelectedListener {
 
     private FrameLayout mFrameLayout;
-    private BottomNavigationView mBottomNavigationView;
+    private TabLayout mTabLayout;
 
     private List<Fragment> mFragmentList = new ArrayList<>();
     private long mExitTime;
@@ -38,9 +36,12 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
     @Override
     protected void initView() {
         mFrameLayout = findViewById(R.id.main_fl);
-        mBottomNavigationView = findViewById(R.id.main_bnv);
-        mBottomNavigationView.setOnNavigationItemSelectedListener(this);
-        mBottomNavigationView.setItemIconTintList(null);
+        mTabLayout = findViewById(R.id.main_tl);
+        mTabLayout.addTab(mTabLayout.newTab().setIcon(getResources().getDrawable(R.drawable.bottom_navigation_item_home)));
+        mTabLayout.addTab(mTabLayout.newTab().setIcon(getResources().getDrawable(R.drawable.bottom_navigation_item_question_bank)));
+        mTabLayout.addTab(mTabLayout.newTab().setIcon(getResources().getDrawable(R.drawable.bottom_navigation_item_news)));
+        mTabLayout.addTab(mTabLayout.newTab().setIcon(getResources().getDrawable(R.drawable.bottom_navigation_item_me)));
+        mTabLayout.addOnTabSelectedListener(this);
     }
 
     @Override
@@ -54,27 +55,27 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
     }
 
     @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.menu_home:
+    public void onTabSelected(TabLayout.Tab tab) {
+        switch (tab.getPosition()) {
+            case 0:
                 if (mLastFragment != 0) {
                     setFragmentPosition(mLastFragment, 0);
                     mLastFragment = 0;
                 }
                 break;
-            case R.id.menu_question:
+            case 1:
                 if (mLastFragment != 1) {
                     setFragmentPosition(mLastFragment, 1);
                     mLastFragment = 1;
                 }
                 break;
-            case R.id.menu_news:
+            case 2:
                 if (mLastFragment != 2) {
                     setFragmentPosition(mLastFragment, 2);
                     mLastFragment = 2;
                 }
                 break;
-            case R.id.menu_me:
+            case 3:
                 if (mLastFragment != 3) {
                     setFragmentPosition(mLastFragment, 3);
                     mLastFragment = 3;
@@ -83,7 +84,16 @@ public class MainActivity extends BaseActivity implements BottomNavigationView.O
             default:
                 break;
         }
-        return true;
+    }
+
+    @Override
+    public void onTabUnselected(TabLayout.Tab tab) {
+
+    }
+
+    @Override
+    public void onTabReselected(TabLayout.Tab tab) {
+
     }
 
     private void setFragmentPosition(int lastFragment, int position) {

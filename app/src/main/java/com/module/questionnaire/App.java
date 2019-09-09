@@ -31,13 +31,12 @@ public class App extends Application {
     }
 
     private void initAppConfig() {
-        String url = "http://console.anxinabc.com/api_v2/config/appConfig";
-        ApiRetrofit.getInstance().getAppConfig(url)
+        ApiRetrofit.getInstance().getAppConfig(Constant.BASE_URL)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(appConfigResponse -> {
                     if (appConfigResponse.isSuccess()) {
-                        Constant.URL = appConfigResponse.getData().getUrl();
+                        Constant.URL = appConfigResponse.getData().getApi_url();
                         initToken();
                     }
                 }, throwable -> LogUtils.e(throwable.getMessage()));
@@ -45,7 +44,7 @@ public class App extends Application {
 
     private void initToken() {
         Map<String, String> params = new HashMap<>();
-        params.put("mobile", "18993195341");
+        params.put("mobile", "18892080470");
         params.put("password", "123456");
         NewApiRetrofit.getInstance().login(params)
                 .subscribeOn(Schedulers.io())
@@ -53,7 +52,6 @@ public class App extends Application {
                 .subscribe(loginResponse -> {
                     if (loginResponse.isSuccess()) {
                         SPUtils.getInstance().put(Constant.TOKEN, loginResponse.getData().getAccess_token());
-
                     }
                 }, throwable -> LogUtils.e(throwable.getMessage()));
     }

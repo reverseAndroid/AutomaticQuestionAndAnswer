@@ -22,7 +22,6 @@ import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
@@ -30,10 +29,8 @@ import android.support.v4.widget.NestedScrollView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.OrientationHelper;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.Gravity;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -72,7 +69,6 @@ import com.module.questionnaire.bean.response.AnswerResponse;
 import com.module.questionnaire.bean.response.BootPlanResponse;
 import com.module.questionnaire.bean.response.DecisionMakingResponse;
 import com.module.questionnaire.bean.response.QuestionResponse;
-import com.module.questionnaire.ui.QuestionAnswerActivity;
 import com.module.questionnaire.ui.WebViewActivity;
 import com.module.questionnaire.utils.Constant;
 import com.module.questionnaire.utils.GetAddressUtil;
@@ -100,9 +96,9 @@ import rx.schedulers.Schedulers;
  */
 public class QuestionFragment extends BaseFragment implements View.OnClickListener, QuestionAnswerAdapter.ItemUpdateListener {
 
-    private Toolbar mToolbar;
     private TextView mTextTitle;
     private FrameLayout mFrameRefresh;
+    private ImageView mImageRefresh;
     private NestedScrollView mNestedScrollView;
     private ImageView mImageCustomerServiceAvatar;
     private TextView mTextCustomerServiceName;
@@ -172,8 +168,11 @@ public class QuestionFragment extends BaseFragment implements View.OnClickListen
     @Override
     protected void initTitle(View contentView) {
         mTextTitle = contentView.findViewById(R.id.layout_title_title_tv);
+        mTextTitle.setText(R.string.home_name);
         mFrameRefresh = contentView.findViewById(R.id.layout_title_right_fl);
         mFrameRefresh.setOnClickListener(this);
+        mImageRefresh = contentView.findViewById(R.id.layout_title_right_iv);
+        mImageRefresh.setImageResource(R.drawable.icon_refresh);
     }
 
     @Override

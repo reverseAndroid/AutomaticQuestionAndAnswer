@@ -7,48 +7,10 @@
     android:fitsSystemWindows="true"
     tools:context=".ui.fragment.QuestionFragment">
 
-    <android.support.design.widget.AppBarLayout
-        android:id="@+id/layout_title_abl"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:elevation="0dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <android.support.v7.widget.Toolbar
-            android:id="@+id/layout_title_tb"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="@color/white">
-
-            <TextView
-                android:id="@+id/layout_title_title_tv"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="问卷调查"
-                android:textColor="@color/black"
-                android:textSize="15dp" />
-
-            <FrameLayout
-                android:id="@+id/layout_title_right_fl"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:layout_gravity="end"
-                android:layout_marginEnd="15dp">
-
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_gravity="center"
-                    android:background="@drawable/icon_refresh" />
-
-            </FrameLayout>
-
-        </android.support.v7.widget.Toolbar>
-
-    </android.support.design.widget.AppBarLayout>
+    <include
+        android:id="@+id/public_title"
+        layout="@layout/public_title"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <android.support.v4.widget.NestedScrollView
         android:id="@+id/question_nsv"
@@ -61,7 +23,7 @@
         app:layout_constraintBottom_toTopOf="@id/question_answer_option_ll"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/layout_title_abl">
+        app:layout_constraintTop_toBottomOf="@id/public_title">
 
         <LinearLayout
             android:layout_width="match_parent"

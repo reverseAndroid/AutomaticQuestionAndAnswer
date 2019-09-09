@@ -6,6 +6,7 @@ import com.module.questionnaire.bean.response.BaseResponse;
 import com.module.questionnaire.bean.response.BootPlanResponse;
 import com.module.questionnaire.bean.response.DecisionMakingResponse;
 import com.module.questionnaire.bean.response.LoginResponse;
+import com.module.questionnaire.bean.response.MeListResponse;
 import com.module.questionnaire.bean.response.QuestionResponse;
 import com.module.questionnaire.bean.response.RegionalChoiceResponse;
 
@@ -58,4 +59,9 @@ public interface Api {
     //获取多维决策
     @POST("api_v4/lead/lead_branch")
     Observable<DecisionMakingResponse> getDecisionMaking();
+
+    //获取我的页面列表数据
+    @Multipart
+    @POST("api/v1/tab")
+    Observable<MeListResponse> getMeList(@PartMap Map<String, RequestBody> params);
 }

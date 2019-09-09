@@ -53,7 +53,7 @@ public class ChoosingLanguageActivity extends BaseActivity implements ChoosingLa
 
     @Override
     protected void initData() {
-        mTextPrompt.setText(R.string.choosing_language);
+        mTextPrompt.setText("Choosing Language");
 
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         layoutManager.setOrientation(OrientationHelper.VERTICAL);
@@ -79,25 +79,6 @@ public class ChoosingLanguageActivity extends BaseActivity implements ChoosingLa
         bean2.setRendering("Chinese");
         bean2.setSelection(false);
         mList.add(bean2);
-
-        if (!TextUtils.isEmpty(SPUtils.getInstance().getString(Constant.LANGUAGE))) {
-            for (int i = 0; i < mList.size(); i++) {
-                mList.get(i).setSelection(false);
-            }
-            switch (SPUtils.getInstance().getString(Constant.LANGUAGE)) {
-                case "en":
-                    mList.get(0).setSelection(true);
-                    break;
-                case "kh":
-                    mList.get(1).setSelection(true);
-                    break;
-                case "zh":
-                    mList.get(2).setSelection(true);
-                    break;
-                default:
-                    break;
-            }
-        }
 
         mAdapter = new ChoosingLanguageAdapter(this, mList);
         mRecyclerView.setAdapter(mAdapter);
@@ -141,8 +122,10 @@ public class ChoosingLanguageActivity extends BaseActivity implements ChoosingLa
         if (view.getId() == R.id.choosing_language_next_btn) {
             if (config == null) {
                 Resources resources = getResources();
+                DisplayMetrics dm = resources.getDisplayMetrics();
                 config = resources.getConfiguration();
                 config.locale = Locale.ENGLISH;
+                resources.updateConfiguration(config, dm);
             }
             SPUtils.getInstance().put(Constant.LANGUAGE, config.locale.getLanguage());
             Intent intent = new Intent(this, MainActivity.class);

@@ -4,23 +4,23 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     tools:context=".ui.MainActivity">
 
     <FrameLayout
         android:id="@+id/main_fl"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@id/main_bnv"
+        app:layout_constraintBottom_toTopOf="@id/main_tl"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <android.support.design.widget.BottomNavigationView
-        android:id="@+id/main_bnv"
+    <android.support.design.widget.TabLayout
+        android:id="@+id/main_tl"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="50dp"
         android:background="@color/white"
-        app:labelVisibilityMode="labeled"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@id/main_fl"
-        app:menu="@menu/main_bottom_navigation" />
+        app:tabIndicatorHeight="0dp" />
 
 </android.support.constraint.ConstraintLayout>

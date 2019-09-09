@@ -3,4 +3,6 @@
     <string name="choosing_language">Choosing Language</string>
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="again_quit">Again quit</string>
+    <string name="home_name">Home</string>
+    <string name="me_name">Me</string>
 </resources>
