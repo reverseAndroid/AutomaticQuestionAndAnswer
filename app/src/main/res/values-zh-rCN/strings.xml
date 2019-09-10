@@ -5,4 +5,12 @@
     <string name="again_quit">再按一次退出程序</string>
     <string name="home_name">首页</string>
     <string name="me_name">我的</string>
+    <string name="login_and_registered">登录\\注册</string>
+    <string name="login_use_phone_login">使用手机号码登录</string>
+    <string name="login_input_commonly_used_phone">请输入您的常用手机号码</string>
+    <string name="login_and_register_phone">手机号码</string>
+    <string name="login_and_register_password">密码</string>
+    <string name="login_btn">登录</string>
+    <string name="login_register"><u>注册</u></string>
+    <string name="login_forget"><u>忘记密码</u></string>
 </resources>

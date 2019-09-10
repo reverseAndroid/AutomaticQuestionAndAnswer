@@ -18,4 +18,11 @@
         <item name="android:scrollHorizontally">true</item>
     </style>
 
+     
+
+    <style name="LoginAndRegisterEditText" parent="Theme.AppCompat.Light">
+        <item name="colorControlNormal">@color/gray</item>
+        <item name="colorControlActivated">@color/colorAccent</item>
+    </style>
+
 </resources>

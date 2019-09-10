@@ -11,16 +11,18 @@ import android.view.ViewGroup;
 
 import com.module.questionnaire.R;
 import com.module.questionnaire.bean.response.MeListResponse;
+import com.module.questionnaire.ui.fragment.MeFragment;
 
 import java.util.List;
 
-public class MeListAdapter extends RecyclerView.Adapter<MeListAdapter.ViewHolder> {
+public class MeListAdapter extends RecyclerView.Adapter<MeListAdapter.ViewHolder> implements ItemMeListAdapter.OnItemClickListener {
 
+    private MeFragment mFragment;
     private Context mContext;
     private List<List<MeListResponse.DataBean>> mList;
-    public ItemMeListAdapter mItemAdapter;
 
-    public MeListAdapter(Context context, List<List<MeListResponse.DataBean>> list) {
+    public MeListAdapter(MeFragment fragment, Context context, List<List<MeListResponse.DataBean>> list) {
+        this.mFragment = fragment;
         this.mContext = context;
         this.mList = list;
     }
@@ -35,21 +37,23 @@ public class MeListAdapter extends RecyclerView.Adapter<MeListAdapter.ViewHolder
     @Override
     public void onBindViewHolder(@NonNull ViewHolder viewHolder, int i) {
         ViewHolder holder = viewHolder;
-        LinearLayoutManager layoutManager = new LinearLayoutManager(mContext) {
-            @Override
-            public boolean canScrollVertically() {
-                return false;
-            }
-        };
+        LinearLayoutManager layoutManager = new LinearLayoutManager(mContext);
         layoutManager.setOrientation(OrientationHelper.VERTICAL);
         holder.recyclerView.setLayoutManager(layoutManager);
-        mItemAdapter = new ItemMeListAdapter(mContext, mList.get(i));
+        ItemMeListAdapter mItemAdapter = new ItemMeListAdapter(mContext, mList.get(i));
         holder.recyclerView.setAdapter(mItemAdapter);
+        mItemAdapter.setOnItemClickListener(this);
     }
 
     @Override
     public int getItemCount() {
         return mList.size();
+    }
+
+    //向fragment反馈子recyclerView的item点击事件
+    @Override
+    public void onItemClick(MeListResponse.DataBean bean) {
+        mFragment.getOnItemClick(bean);
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {

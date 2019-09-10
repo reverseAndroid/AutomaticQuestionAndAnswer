@@ -17,6 +17,7 @@ import com.module.questionnaire.adapter.ChoosingLanguageAdapter;
 import com.module.questionnaire.base.BaseActivity;
 import com.module.questionnaire.bean.ChoosingLanguageBean;
 import com.module.questionnaire.utils.Constant;
+import com.module.questionnaire.utils.LogUtils;
 import com.module.questionnaire.utils.SPUtils;
 
 import java.util.ArrayList;
@@ -103,12 +104,12 @@ public class ChoosingLanguageActivity extends BaseActivity implements ChoosingLa
                 mTextPrompt.setText("Choosing Language");
                 break;
             case 1:
-                mTextPrompt.setText("fljalsfajhsdhgfa");
                 config.locale = new Locale("kh");
+                mTextPrompt.setText("fljalsfajhsdhgfa");
                 break;
             case 2:
-                mTextPrompt.setText("您选择的语言是");
                 config.locale = Locale.SIMPLIFIED_CHINESE;
+                mTextPrompt.setText("您选择的语言是");
                 break;
             default:
                 break;

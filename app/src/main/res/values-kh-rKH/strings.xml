@@ -5,4 +5,12 @@
     <string name="again_quit">Again quit</string>
     <string name="home_name">Home</string>
     <string name="me_name">Me</string>
+    <string name="login_and_registered">Login\\Registered</string>
+    <string name="login_use_phone_login">Use phone number login</string>
+    <string name="login_input_commonly_used_phone">Please enter your usual mobile number</string>
+    <string name="login_and_register_phone">phone</string>
+    <string name="login_and_register_password">password</string>
+    <string name="login_btn">Login</string>
+    <string name="login_register"><u>Register</u></string>
+    <string name="login_forget"><u>Forget password</u></string>
 </resources>

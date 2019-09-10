@@ -1,5 +1,7 @@
 package com.module.questionnaire.ui;
 
+import android.content.Intent;
+import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
@@ -10,6 +12,7 @@ import android.widget.Toast;
 import com.module.questionnaire.R;
 import com.module.questionnaire.base.BaseActivity;
 import com.module.questionnaire.ui.fragment.FragmentFactory;
+import com.module.questionnaire.utils.Constant;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -102,6 +105,19 @@ public class MainActivity extends BaseActivity implements TabLayout.BaseOnTabSel
             transaction.add(R.id.main_fl, mFragmentList.get(position));
         }
         transaction.hide(mFragmentList.get(lastFragment)).show(mFragmentList.get(position)).commitAllowingStateLoss();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK) {
+            switch (requestCode) {
+                case Constant.LOGIN_AND_REGISTER:
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 
     @Override

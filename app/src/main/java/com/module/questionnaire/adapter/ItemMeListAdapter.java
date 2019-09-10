@@ -49,12 +49,9 @@ public class ItemMeListAdapter extends RecyclerView.Adapter<ItemMeListAdapter.Vi
         ViewHolder holder = viewHolder;
         Glide.with(mContext).load(mList.get(i).getDesc()).apply(new RequestOptions().placeholder(R.drawable.icon_default_user_avatar)).into(holder.imageIcon);
         holder.textTitle.setText(mList.get(i).getTitle());
-        holder.itemView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (mOnItemClickListener != null) {
-                    mOnItemClickListener.onItemClick(mList.get(i));
-                }
+        holder.itemView.setOnClickListener(view -> {
+            if (mOnItemClickListener != null) {
+                mOnItemClickListener.onItemClick(mList.get(i));
             }
         });
     }

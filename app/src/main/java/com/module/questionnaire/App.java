@@ -37,21 +37,6 @@ public class App extends Application {
                 .subscribe(appConfigResponse -> {
                     if (appConfigResponse.isSuccess()) {
                         Constant.URL = appConfigResponse.getData().getApi_url();
-                        initToken();
-                    }
-                }, throwable -> LogUtils.e(throwable.getMessage()));
-    }
-
-    private void initToken() {
-        Map<String, String> params = new HashMap<>();
-        params.put("mobile", "18892080470");
-        params.put("password", "123456");
-        NewApiRetrofit.getInstance().login(params)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(loginResponse -> {
-                    if (loginResponse.isSuccess()) {
-                        SPUtils.getInstance().put(Constant.TOKEN, loginResponse.getData().getAccess_token());
                     }
                 }, throwable -> LogUtils.e(throwable.getMessage()));
     }
