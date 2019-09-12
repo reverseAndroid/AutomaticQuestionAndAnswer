@@ -48,7 +48,8 @@
         <activity android:name=".ui.ChoosingLanguageActivity" />
         <activity android:name=".ui.LoginActivity" />
         <activity android:name=".ui.RegisterActivity" />
-        <activity android:name=".ui.ForgetPasswordActivity"></activity>
+        <activity android:name=".ui.ForgetPasswordActivity" />
+        <activity android:name=".ui.RegisterAgreementActivity"></activity>
     </application>
 
 </manifest>

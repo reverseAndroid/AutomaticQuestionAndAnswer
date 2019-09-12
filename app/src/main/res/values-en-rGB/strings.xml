@@ -13,4 +13,10 @@
     <string name="login_btn">Login</string>
     <string name="login_register"><u>Register</u></string>
     <string name="login_forget"><u>Forget password</u></string>
+    <string name="register_code">Verification code</string>
+    <string name="register_btn">Register</string>
+    <string name="register_account">Register an account</string>
+    <string name="get_verification_code"><u>Get code</u></string>
+    <string name="i_have_read_and_agree_to_the">I have read and agree to the</string>
+    <string name="registration_agreement"><u>registration agreement</u></string>
 </resources>

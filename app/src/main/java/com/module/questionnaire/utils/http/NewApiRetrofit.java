@@ -103,4 +103,8 @@ public class NewApiRetrofit extends BaseApiRetrofit {
     public Observable<MeListResponse> getMeList(Map<String, String> params) {
         return mApi.getMeList(getFormRequestBody(params));
     }
+
+    public Observable<Object> register(Map<String, String> params) {
+        return mApi.register(getJsonRequestBody(params));
+    }
 }

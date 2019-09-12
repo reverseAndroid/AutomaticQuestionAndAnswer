@@ -81,6 +81,29 @@ public class ChoosingLanguageActivity extends BaseActivity implements ChoosingLa
         bean2.setSelection(false);
         mList.add(bean2);
 
+        if (!TextUtils.isEmpty(SPUtils.getInstance().getString(Constant.LANGUAGE))) {
+            int position = 0;
+            switch (SPUtils.getInstance().getString(Constant.LANGUAGE)) {
+                case "en":
+                    position = 0;
+                    break;
+                case "kh":
+                    position = 1;
+                    break;
+                case "zh":
+                    position = 2;
+                    break;
+                default:
+                    break;
+            }
+
+            for (int i = 0; i < mList.size(); i++) {
+                mList.get(i).setSelection(false);
+            }
+
+            mList.get(position).setSelection(true);
+        }
+
         mAdapter = new ChoosingLanguageAdapter(this, mList);
         mRecyclerView.setAdapter(mAdapter);
         mAdapter.setOnItemClickListener(this);

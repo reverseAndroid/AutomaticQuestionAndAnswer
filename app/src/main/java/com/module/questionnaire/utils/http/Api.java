@@ -64,4 +64,8 @@ public interface Api {
     @Multipart
     @POST("api/v1/tab")
     Observable<MeListResponse> getMeList(@PartMap Map<String, RequestBody> params);
+
+    //注册
+    @POST("api/v1/register")
+    Observable<Object> register(@Body RequestBody requestBody);
 }

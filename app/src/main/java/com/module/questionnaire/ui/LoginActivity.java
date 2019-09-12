@@ -201,6 +201,8 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener,
                     if (loginResponse.isSuccess()) {
                         SPUtils.getInstance().put(Constant.TOKEN, loginResponse.getData().getAccess_token());
                         SPUtils.getInstance().put(Constant.USER_NAME, loginResponse.getData().getUser().getFirst_name());
+                        setResult(RESULT_OK);
+                        finish();
                     }
                 }, throwable -> LogUtils.e(throwable.getMessage()));
     }
